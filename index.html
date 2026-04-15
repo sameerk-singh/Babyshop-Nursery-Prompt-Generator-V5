@@ -201,6 +201,7 @@ function App(){
   var resolve=function(pool,sel){return sel==="_r"?pk(pool):pool.find(function(x){return(x.id||x.name)===sel})||pk(pool)};
   var gen=function(){var co=cats[0].find(function(c){return c.name===selCat[0]});if(!co)return;var a=resolve(aes[0],mAes[0]),z=resolve(zones[0],mZone[0]),w=resolve(walls[0],mWall[0]),l=resolve(lights[0],mLight[0]),m=resolve(micros[0],mMicro[0]),r=resolve(mrs[0],mMr[0]);var wd1=resolve(wds[0],mWd[0]);var others=wds[0].filter(function(x){return(x.id||x.name)!==(wd1.id||wd1.name)});var wd2=others.length?pk(others):wd1;var cs=shots[0].map(function(s){return{shot:s,prompt:makePrompt(selCat[0],s,a,z,w,l,m,r,s.n===8?wd1:wd2),aes:a,zone:z,wall:w,light:l,micro:m,mr:r,wd:s.n===8?wd1:wd2}});cards[1](cs);openIdx[1](null)};
   var copyAll=function(){var h=shots[0].map(function(_,i){return"shot-"+(i+1)+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");navigator.clipboard.writeText(h+"\n"+v)};
+  var downloadCSV=function(){var h=shots[0].map(function(_,i){return"shot-"+(i+1)+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");var csv=h+"\n"+v;var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="babyshop_prompts_"+selCat[0].replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)};
   var doImport=function(){try{var data=JSON.parse(impText[0]);if(!Array.isArray(data)){impStatus[1]("err:Must be a JSON array");return}var p=poolMap[impType[0]];if(impMode[0]==="replace")p.s(data);else p.s([].concat(p.d,data));impStatus[1]("ok:Added "+data.length+" entries to "+p.l);impText[1]("")}catch(e){impStatus[1]("err:Invalid JSON \u2014 "+e.message)}};
   var resetAll=function(){if(confirm("Reset ALL pools to factory defaults?")){aes[1](_A);zones[1](_Z);walls[1](_W);lights[1](_L);micros[1](_M);mrs[1](_MR);wds[1](_WD);cats[1](_C)}};
 
@@ -220,7 +221,7 @@ function App(){
     ),
     E("div",{className:"divider"}),
     E("button",{className:"gen-btn",onClick:gen},"\u2728 Generate "+shots[0].length+" Shots"),
-    cards[0].length>0&&E("button",{className:"csv-btn",onClick:copyAll},"\uD83D\uDCE5 Export CSV Row")
+    cards[0].length>0&&E("button",{className:"csv-btn",onClick:copyAll},"\uD83D\uDCCB Copy CSV"),E("button",{className:"csv-btn",onClick:downloadCSV},"\uD83D\uDCE5 Download CSV")
   );
 
   // ─── GENERATOR: RIGHT PANEL ───
