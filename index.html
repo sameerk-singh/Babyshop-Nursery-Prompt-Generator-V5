@@ -205,7 +205,7 @@ function dbToApp(row,type){
 }
 function appToDb(item,type,idx){
   var out={};
-  for(var k in item){if(k==="desc")out["description"]=item[k];else if(k==="_idx")continue;else out[k]=item[k]}
+  for(var k in item){if(k.charAt(0)==="_")continue;if(k==="desc")out["description"]=item[k];else out[k]=item[k]}
   if(idx!==undefined&&idx!==null)out["sort_order"]=idx;
   return out;
 }
