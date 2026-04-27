@@ -32,6 +32,16 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 .sync-indicator.error .sync-dot{background:#F09595}
 .sync-indicator.offline{background:rgba(255,180,180,.15)}
 .sync-indicator.offline .sync-dot{background:#E24B4A}
+.auth-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer;font-family:var(--font-body);transition:all .15s}
+.auth-btn:hover{background:rgba(255,255,255,.22)}
+.auth-btn.authed{background:rgba(194,237,206,.2);border-color:rgba(194,237,206,.4);color:#C2EDCE}
+.lock-banner{background:linear-gradient(90deg,rgba(186,223,231,.18),rgba(194,237,206,.18));border:1px solid var(--c2);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;font-size:13px}
+.lock-banner.t2{background:linear-gradient(90deg,rgba(245,239,230,.6),rgba(245,239,230,.3));border-color:var(--t2)}
+.lock-banner-icon{font-size:18px}
+.lock-banner-text{flex:1;color:var(--mid);line-height:1.5}
+.lock-banner-text strong{color:var(--dark)}
+.lock-banner button{padding:6px 14px;border:none;border-radius:6px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;background:var(--c1);color:#fff;white-space:nowrap}
+.lock-banner.t2 button{background:var(--t2)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .hdr-badge{background:var(--c4);color:var(--dark);font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase}
 .hdr.tier2 .hdr-badge{background:var(--t2-light);color:var(--t2)}
@@ -167,6 +177,16 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 </style></head><body><div id="root"></div>
 <script>var SUPABASE_URL="https://inwbvstpcgfrocvbnnge.supabase.co";
 var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlud2J2c3RwY2dmcm9jdmJubmdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjAzNzcsImV4cCI6MjA5MjMzNjM3N30.nrj1p8bpzZjAcAR8RbiJJb2jqxh0whBrWrO_r0PdHpA";
+
+// ═══ TEAM EDITOR PASSWORD ═══
+// Password: BabyshopV5#2026  (SHA-256 hash below)
+// To change: hash a new password with SHA-256 and replace the hash string.
+var EDITOR_PASS_HASH="ff683642024b61848b6fd7e2e93f60294ba720b7073c4f6a4eb0f3da3586c7ec";
+var AUTH_KEY="bsV5_editorAuth";
+function sha256(s){var enc=new TextEncoder().encode(s);return crypto.subtle.digest("SHA-256",enc).then(function(buf){var arr=Array.from(new Uint8Array(buf));return arr.map(function(b){return b.toString(16).padStart(2,"0")}).join("")})}
+function isAuthed(){return localStorage.getItem(AUTH_KEY)===EDITOR_PASS_HASH}
+function setAuthed(v){if(v)localStorage.setItem(AUTH_KEY,EDITOR_PASS_HASH);else localStorage.removeItem(AUTH_KEY)}
+
 var _A=[{"id": "scandi", "label": "Scandinavian Nursery", "mood": "Light, calm, minimal, airy, pale woods, tactile restraint", "materials": "Light oak, birch, white plaster, biscuit-pale tones, neutral textiles, soft clean sunlight", "language": "Scandinavian minimalism, restrained warmth, quiet luxury, clean editorial daylight"}, {"id": "boho", "label": "Boho Nursery", "mood": "Collected warmth, natural fiber-rich, woven textures, layered and lived-in", "materials": "Rattan, jute, macrame, warm walnut, arched plaster niches, recessed shelving, terracotta accents", "language": "Bohemian warmth, collected natural materials, layered textiles, diffused golden light"}, {"id": "medit", "label": "Mediterranean Nursery", "mood": "Sun-warmed calm, limewash softness, breezy domestic warmth, morning light", "materials": "Travertine, lime-washed walls, terracotta-soft tile, artisanal wood, olive branches, warm plaster", "language": "Mediterranean ease, limewash plaster, sun-soft stone, terracotta warmth, breezy calm"}, {"id": "boutique", "label": "Boutique Editorial Nursery", "mood": "Fashion-aware, gallery-clean, sculptural, premium architectural composition", "materials": "Taupe moulding walls, sage-painted zones, marble accents, premium parquet, sculptural lighting", "language": "Boutique editorial, refined moulding detail, sculptural light, fashion-forward nursery"}, {"id": "coastal", "label": "Coastal Nursery", "mood": "Bright, overexposed, breezy, bleached and airy, resort-adjacent", "materials": "Shiplap, bleached oak, white linen, rattan pendant, soft blue accents, cotton runners", "language": "Coastal airy, bleached wood and shiplap, bright overexposed daylight, breezy editorial"}, {"id": "japandi", "label": "Japandi Nursery", "mood": "Wabi-sabi, deeply restrained, material-honest, quiet premium", "materials": "Pale ash, paper lanterns, minimal linen, ceramic wabi-sabi objects, no ornamentation", "language": "Japandi minimal, wabi-sabi, natural materials, restrained elegance, quiet premium"}, {"id": "warmtona", "label": "Warm Tonal Nursery", "mood": "Cream-on-cream, intimate cozy calm, soft golden light, oatmeal textures", "materials": "Bleached oak, cream shaggy rug, knitted throws, pampas grass, sheer pleated curtains", "language": "Warm tonal cream, oatmeal and bleached oak, intimate cozy calm, premium soft daylight"}, {"id": "heritage", "label": "Classic Heritage Nursery", "mood": "Traditional elegance, muted pastels, heritage refinement, panelled warmth", "materials": "Board and batten panelling, muted sage or blush, warm walnut, heritage picture frames, crown moulding", "language": "Classic European nursery, traditional panelling, muted pastels, refined heritage elegance"}, {"id": "cottagec", "label": "Vintage Cottagecore Nursery", "mood": "Soft, nostalgic, homey, handmade charm, floral romanticism, heirloom quality", "materials": "Reclaimed wood, crocheted blankets, embroidered cushions, dried flower wreaths, fringed canopies, delicate lace, vintage wooden toys", "language": "Whimsical cottagecore, antiqued distressed furniture, floral toile, handmade crafts, dreamy afternoon warmth"}, {"id": "luxeneut", "label": "Luxe Neutral Nursery", "mood": "Elegant and serene, plush fabrics, refined architectural details, calm sophisticated palette", "materials": "Velvet cushions, brass light fixtures, marble or stone details, cashmere throws, tufted headboard accents, pampas grass", "language": "Luxe neutral, velvet and brass, marble refinement, serene sophistication, warm muted lighting"}, {"id": "playful", "label": "Playful Bright Nursery", "mood": "Cheerful, whimsical, energetic, bold patterns and distinct pops of color", "materials": "Colorful decals, rainbow or polka-dot wallpaper, wooden toy trains, bunting and garlands, geometric pillows, glossy paints", "language": "Playful bright, cheerful modern nursery, bold geometric accents, energetic joy, bright balanced daylight"}, {"id": "genderne", "label": "Modern Gender-Neutral Nursery", "mood": "Contemporary, calm, clean design avoiding stereotypes, moon and star motifs", "materials": "Mountain or star wall art, geometric mobiles, charcoal and sage and mustard palette, clean-line furniture", "language": "Modern gender-neutral, contemporary calm nursery, geometric accent, avoiding stereotypes, balanced light"}, {"id": "colorpop", "label": "Scandi Color-Pop Nursery", "mood": "Bold architectural confidence, clean Scandinavian base with one fearless saturated wall commitment, playful but design-forward, graphic pattern energy, curated toy mess as intentional styling", "materials": "Matte saturated accent wall (sky blue, coral, or deep orange \u2014 one color only), white lacquer furniture, pale birch or light oak wide-plank floor, graphic black-and-white dot or stripe cotton textiles, paper chain or bunting garland overhead, colorful geometric area rug, 3-5 curated toy props", "language": "Scandinavian color-pop nursery, bold matte accent wall with one committed hero hue, white furniture high contrast, graphic dot and stripe textiles, paper chain vertical interest, curated playful mess, bright clean editorial daylight"}, {"id": "storyboo", "label": "Rustic Storybook Nursery", "mood": "Warm romantic discovery, architectural character with sloped ceilings or attic geometry, mural storytelling on warm walls, doorway-framed reveals, tender slow-breathing calm, heirloom warmth with natural pine grounding", "materials": "Warm pine or honey oak wide-plank floor, beige or warm stone matte walls, oversized soft floral or botanical nature mural decals, white painted crib and wardrobe, linen-upholstered armchair with cream throw, fabric garland, soft pastel pink and cream textiles, simple play mat on open center floor", "language": "Rustic storybook nursery, warm pine floor, soft oversized floral mural on beige wall, architectural ceiling character, shot-through-doorway foreground framing, gentle diffuse daylight, tender peaceful editorial mood"}, {"id": "sunset", "label": "Sunset Bedtime Nursery", "mood": "Hushed bedtime intimacy, deep saturated walls creating dramatic white-furniture contrast, warm practical nightlight as emotional centerpiece, evening ritual calm, secure sleepy atmosphere, restrained props for quiet focus", "materials": "Deep matte saturated wall in burnt orange or deep teal or dusty rose, white bed frame or crib, warm cloud-shaped or soft-glow nightlight beside the bed, simple wooden book rack, cozy statement rug, minimal bedding with one accent throw, no overhead lighting \u2014 nightlight and faint ambient window glow only", "language": "Sunset bedtime nursery, deep saturated color-drench wall, warm nightlight glow, white furniture dramatic contrast, minimal evening styling, hushed cozy twilight editorial, book-rack bedtime routine cues, secure restful mood"}, {"id": "graphics", "label": "Graphic Studio Nursery", "mood": "Modern graphic confidence, sculptural product arrangement on bold color-field intersection, crisp editorial precision, high-saturation catalog energy, no domestic pretense \u2014 pure styled product staging", "materials": "Two matte color planes forming wall-floor intersection (electric blue and orange, or pink and sage, or yellow and teal), hard directional key light at 45 degrees casting crisp geometric shadows, no room furniture, no window, no textile softness, no plants, no domestic props \u2014 product only with deliberate triangular or diagonal spacing", "language": "Graphic studio color-block nursery, bold intersecting matte color planes, sculptural product placement, hard directional light, crisp geometric shadows, high-saturation modern catalog editorial, clean tight composition"}];
 var _W=[{"id": "beadboar", "label": "Beadboard Wainscoting", "desc": "Vertical beadboard wainscoting panelling in soft sage, warm white, or cream"}, {"id": "botanica", "label": "Botanical Mural Wallpaper", "desc": "Hand-painted botanical mural wallpaper with delicate wildflowers and meadow grasses on a soft sage or cream background"}, {"id": "board_ba", "label": "Board & Batten Panelling", "desc": "Vertical board and batten wall panelling in warm white or muted sage painted finish"}, {"id": "shiplap", "label": "Shiplap Plank Wall", "desc": "White painted horizontal shiplap plank wall with visible seam lines"}, {"id": "soft_pla", "label": "Soft Painted Plaster", "desc": "Smooth warm painted plaster wall in soft white, cream, or warm sand"}, {"id": "limewash", "label": "Limewash Textured Wall", "desc": "Warm limewash plaster wall with subtle organic texture and depth"}, {"id": "fluted", "label": "Fluted Panel Wall", "desc": "Vertical fluted plaster or wood panel wall with refined tactile rhythm"}, {"id": "floral_t", "label": "Floral Toile Wallpaper", "desc": "Delicate floral toile or vintage botanical print wallpaper in muted cream, sage, or blush tones"}, {"id": "accent_b", "label": "Bright Accent Wall", "desc": "Bold painted accent wall in soft teal, warm mustard, or dusty blue with clean contemporary finish"}, {"id": "saturate", "label": "Saturated Matte Accent Wall", "desc": "Single bold matte-painted accent wall in a committed saturated color \u2014 sky blue, coral, deep orange, or forest green. Remaining walls stay clean white or light grey. The color commitment is architectural and confident, not decorative. Surface is smooth matte plaster with no texture pattern."}, {"id": "floral_m", "label": "Soft Oversized Floral Mural", "desc": "Oversized soft-focus floral or botanical mural decals on warm beige or stone-toned wall. Flowers are large-scale, muted, and romantic \u2014 not bright or cartoonish. Palette stays within blush, cream, sage, and dusty pink. Wall surface reads as warm plaster beneath the decals. Mural occupies one feature wall only."}, {"id": "color_bl", "label": "Color-Block Studio Plane", "desc": "Two intersecting matte color fields forming a studio corner \u2014 wall in one saturated color, floor in a bold complementary color. No texture, no window, no baseboard, no architectural detail. Pure flat graphic color meeting at a clean horizon line. Colors are confident and high-saturation: electric blue and orange, pink and sage, yellow and teal."}, {"id": "arched", "label": "Arched Alcove Plaster", "desc": "Arched alcove plaster wall with architectural framing and warm depth"}];
 var _L=[{"id": "soft_day", "label": "Soft Diffused Daylight", "desc": "Even balanced daylight, gallery-clean, soft shadows"}, {"id": "golden", "label": "Warm Golden-Hour Directional", "desc": "Golden-hour directional sunlight with elegant highlights and soft-edged shadow play"}, {"id": "morning", "label": "Morning Light Streak", "desc": "Early morning calm with directional warm light streaks across surfaces"}, {"id": "bright", "label": "Bright Airy Overexposed", "desc": "Bright coastal-style overexposed window light, blown-out whites, breezy"}, {"id": "window_w", "label": "Soft Window Wash", "desc": "Single-side even natural window light with gentle shadow falloff"}, {"id": "grazing", "label": "Grazing Texture Light", "desc": "Low-angle grazing light designed to reveal weave, pile, surface texture and relief"}, {"id": "ambient", "label": "Warm Ambient Fill", "desc": "General room warmth, soft everywhere, no harsh directional shadows"}, {"id": "nightlig", "label": "Warm Nightlight Glow", "desc": "Low ambient environment with warm practical nightlight as the primary light source. Soft golden-orange glow from a bedside cloud lamp or night-light, casting gentle warm pools on nearby surfaces. No overhead lighting. Faint cool window ambient from twilight sky provides subtle fill. Overall mood is hushed, intimate, and drowsy. Shadows are deep but soft-edged. White balance shifts warm."}, {"id": "hard_stu", "label": "Hard Directional Studio Key", "desc": "Single hard key light at 45 degrees creating crisp, defined geometric shadows on the color-block studio floor. No fill light, no bounce, no diffusion. Shadows are sharp-edged and dark. Light is neutral-to-cool white \u2014 no warm cast. High contrast between lit surfaces and shadow areas. Product edges are crisply defined. Studio lighting that reads as intentional and graphic, not domestic."}];
@@ -302,6 +322,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tier,cats){
 function App(){
   var tier=uS("t1"),tab=uS("gen");
   var loading=uS(true),syncState=uS("synced"),loadError=uS(null);
+  var authed=uS(isAuthed()),loginOpen=uS(false),loginPw=uS(""),loginErr=uS("");
   // Data pools — all start empty, populated from Supabase
   var aes=uS([]),walls=uS([]),lights=uS([]),micros=uS([]);
   var aes2=uS([]),walls2=uS([]),lights2=uS([]),micros2=uS([]);
@@ -393,6 +414,7 @@ function App(){
 
   // ═══ SUPABASE WRITE OPERATIONS ═══
   var saveItem=function(poolKey,item,isAdd,origKey){
+    if(!authed[0]){loginOpen[1](true);return Promise.reject(new Error("Login required"))}
     saving[1](true);
     syncState[1]("syncing");
     var table=TABLE_MAP[poolKey];
@@ -417,6 +439,7 @@ function App(){
   };
 
   var deleteItem=function(poolKey,item){
+    if(!authed[0]){loginOpen[1](true);return}
     syncState[1]("syncing");
     var table=TABLE_MAP[poolKey];
     var keyField=KEY_FIELD(poolKey);
@@ -434,6 +457,7 @@ function App(){
   };
 
   var doImport=function(){
+    if(!authed[0]){loginOpen[1](true);return}
     try{
       var data=JSON.parse(impText[0]);
       if(!Array.isArray(data)){impStatus[1]("err:Must be a JSON array");return}
@@ -465,6 +489,25 @@ function App(){
     }catch(e){impStatus[1]("err:Invalid JSON \u2014 "+e.message)}
   };
 
+  // ═══ LOGIN / LOGOUT ═══
+  var doLogin=function(){
+    sha256(loginPw[0]).then(function(h){
+      if(h===EDITOR_PASS_HASH){
+        setAuthed(true);
+        authed[1](true);
+        loginOpen[1](false);
+        loginPw[1]("");
+        loginErr[1]("");
+      }else{
+        loginErr[1]("Incorrect password");
+      }
+    });
+  };
+  var doLogout=function(){
+    setAuthed(false);
+    authed[1](false);
+  };
+
   var tierCls=isT2?" t2":"";
   var syncCls=syncState[0]==="syncing"?" syncing":(syncState[0]==="error"?" error":(syncState[0]==="offline"?" offline":""));
   var syncText=syncState[0]==="syncing"?"Syncing\u2026":(syncState[0]==="error"?"Sync error":(syncState[0]==="offline"?"Offline (local only)":"Cloud synced"));
@@ -481,6 +524,9 @@ function App(){
   var header=E("div",{className:"hdr"+tierCls},
     E("div",{className:"hdr-left"},E("div",{className:"logo-mark"},"B"),E("div",null,E("div",{className:"logo-text"},"Babyshop Nursery"),E("div",{className:"logo-sub"},"AI Prompt Generator V5"))),
     E("div",{className:"hdr-right"},
+      authed[0]
+        ? E("button",{className:"auth-btn authed",onClick:doLogout,title:"Editor logged in \u2014 click to log out"},"\uD83D\uDD13 Editor")
+        : E("button",{className:"auth-btn",onClick:function(){loginOpen[1](true)},title:"Log in to edit taxonomy"},"\uD83D\uDD12 Login"),
       E("div",{className:"sync-indicator"+syncCls,title:loadError[0]||""},E("span",{className:"sync-dot"}),E("span",null,syncText)),
       E("div",{className:"hdr-badge"},isT2?"Tier 2 \u2014 PDP Ecom":"Tier 1 \u2014 Editorial")
     )
@@ -521,23 +567,53 @@ function App(){
     return{id:"",label:"",desc:""};
   };
 
+  var lockBanner=!authed[0]&&E("div",{className:"lock-banner"+tierCls},
+    E("div",{className:"lock-banner-icon"},"\uD83D\uDD12"),
+    E("div",{className:"lock-banner-text"},E("strong",null,"View-only mode."),E("br"),"You can browse the taxonomy but cannot add, edit, delete, or import. Log in to unlock editing."),
+    E("button",{onClick:function(){loginOpen[1](true)}},"Login")
+  );
+
   var resTab=E("div",{className:"full-panel"},
+    lockBanner,
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F All changes save to cloud and sync to the whole team instantly. T1 and T2 pools are separate. Zones, Model Regions, Wardrobes, and Categories are shared across tiers."),
-    E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0],onClick:function(){editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
-    E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,"Actions"))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del"))))}))),
+    E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0]||!authed[0],onClick:function(){if(!authed[0]){loginOpen[1](true);return}editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
+    E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,authed[0]?"Actions":""))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,authed[0]?E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del")):null))}))),
     editItem[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget&&!saving[0]){editItem[1](null);addMode[1](false)}}},E("div",{className:"modal"},E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),E("div",{className:"modal-body"},Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"}).map(function(k){return E("div",{key:k},E("label",{className:"f-label"},k),(editItem[0][k]||"").length>60?E("textarea",{className:"f-textarea",rows:3,value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}):E("input",{className:"f-input",value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}))})),E("div",{className:"modal-footer"},E("button",{className:"save-btn"+tierCls,disabled:saving[0],onClick:function(){saveItem(rt[0],editItem[0],addMode[0],editItem[0]._origKey).then(function(){editItem[1](null);addMode[1](false)})}},saving[0]?"Saving\u2026":"Save"),E("button",{className:"cancel-btn",disabled:saving[0],onClick:function(){editItem[1](null);addMode[1](false)}},"Cancel"))))
   );
 
   var impTab=E("div",{className:"full-panel"},
+    lockBanner,
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F Import and export work directly with the cloud. Imports sync to the whole team."),
     E("div",{className:"imp-section"},E("div",{className:"st"},"Export"),E("div",{style:{display:"flex",gap:8,marginTop:8,alignItems:"center"}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("button",{className:"add-btn"+tierCls,onClick:function(){var d=poolMap[impType[0]].d;navigator.clipboard.writeText(JSON.stringify(d,null,2));impStatus[1]("ok:Copied "+d.length+" entries")}},"Copy to Clipboard"))),
-    E("div",{className:"imp-section"},E("div",{className:"st"},"Import"),E("div",{style:{display:"flex",gap:8,marginTop:8}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("select",{className:"ctrl-select",style:{maxWidth:130},value:impMode[0],onChange:function(e){impMode[1](e.target.value)}},E("option",{value:"append"},"Append"),E("option",{value:"replace"},"Replace all"))),E("textarea",{className:"f-textarea",rows:8,placeholder:"Paste JSON array here...",value:impText[0],onChange:function(e){impText[1](e.target.value)},style:{marginTop:8}}),E("button",{className:"add-btn"+tierCls,style:{marginTop:8},onClick:doImport},"Import to Cloud"),impStatus[0]&&E("div",{className:"imp-status "+(impStatus[0].indexOf("ok")===0?"imp-ok":"imp-err")},impStatus[0].substring(impStatus[0].indexOf(":")+1)))
+    E("div",{className:"imp-section"},E("div",{className:"st"},"Import"),E("div",{style:{display:"flex",gap:8,marginTop:8}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("select",{className:"ctrl-select",style:{maxWidth:130},value:impMode[0],onChange:function(e){impMode[1](e.target.value)}},E("option",{value:"append"},"Append"),E("option",{value:"replace"},"Replace all"))),E("textarea",{className:"f-textarea",rows:8,placeholder:"Paste JSON array here...",value:impText[0],onChange:function(e){impText[1](e.target.value)},style:{marginTop:8}}),E("button",{className:"add-btn"+tierCls,style:{marginTop:8},disabled:!authed[0],onClick:doImport},authed[0]?"Import to Cloud":"\uD83D\uDD12 Login required"),impStatus[0]&&E("div",{className:"imp-status "+(impStatus[0].indexOf("ok")===0?"imp-ok":"imp-err")},impStatus[0].substring(impStatus[0].indexOf(":")+1)))
+  );
+
+  var loginModal=loginOpen[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}}},
+    E("div",{className:"modal",style:{maxWidth:380}},
+      E("div",{className:"modal-header"},
+        E("h3",null,"\uD83D\uDD12 Editor Login"),
+        E("button",{className:"modal-close",onClick:function(){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}},"\u00D7")
+      ),
+      E("div",{className:"modal-body"},
+        E("div",{style:{fontSize:12,color:"var(--mid)",marginBottom:14,lineHeight:1.5}},"Enter the team password to unlock taxonomy editing. Generate works without login \u2014 only Resources and Import need this."),
+        E("label",{className:"f-label"},"Password"),
+        E("input",{className:"f-input",type:"password",value:loginPw[0],autoFocus:true,
+          onChange:function(e){loginPw[1](e.target.value);if(loginErr[0])loginErr[1]("")},
+          onKeyDown:function(e){if(e.key==="Enter")doLogin()}}),
+        loginErr[0]&&E("div",{style:{fontSize:12,color:"#b44",marginTop:8}},loginErr[0])
+      ),
+      E("div",{className:"modal-footer"},
+        E("button",{className:"save-btn"+tierCls,onClick:doLogin},"Unlock"),
+        E("button",{className:"cancel-btn",onClick:function(){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}},"Cancel")
+      )
+    )
   );
 
   return E("div",null,header,tierBar,nav,
     tab[0]==="gen"&&E("div",{className:"split"},leftPanel,rightPanel),
     tab[0]==="res"&&resTab,
-    tab[0]==="imp"&&impTab
+    tab[0]==="imp"&&impTab,
+    loginModal
   );
 }
 ReactDOM.createRoot(document.getElementById("root")).render(E(App));
