@@ -371,6 +371,12 @@ function App(){
 
   var resolve=function(pool,sel){return sel==="_r"?pk(pool):pool.find(function(x){return(x.id||x.name)===sel})||pk(pool)};
 
+  // ═══ Categories that get Shots 10 & 11 (highest/lowest position feature demo) ═══
+  // All other categories produce a 9-shot sequence.
+  var ADJUSTABLE_CATEGORIES={"Crib":1,"Bouncer":1,"Walker":1,"Swing":1,"Recliner Chair":1,"Changing Table":1};
+  var hasPositionShots=function(catName){return ADJUSTABLE_CATEGORIES.hasOwnProperty(catName)};
+  var shotsForCategory=function(catName){return shots[0].filter(function(s){return s.n<10||hasPositionShots(catName)})};
+
   var gen=function(){
     if(!cats[0].length||!aes[0].length||!aes2[0].length){alert("Data still loading. Try again in a moment.");return}
     var co=cats[0].find(function(c){return c.name===selCat[0]});if(!co)return;
@@ -378,11 +384,12 @@ function App(){
     var wd1=resolve(wds[0],mWd[0]);
     var others=wds[0].filter(function(x){return(x.id||x.name)!==(wd1.id||wd1.name)});
     var wd2=others.length?pk(others):wd1;
-    var cs=shots[0].map(function(s){return{shot:s,prompt:makePrompt(selCat[0],s,a,z,w,l,m,r,s.n===8?wd1:wd2,tier[0],cats[0]),aes:a,zone:z,wall:w,light:l,micro:m,mr:r,wd:s.n===8?wd1:wd2}});
+    var filteredShots=shotsForCategory(selCat[0]);
+    var cs=filteredShots.map(function(s){return{shot:s,prompt:makePrompt(selCat[0],s,a,z,w,l,m,r,s.n===8?wd1:wd2,tier[0],cats[0]),aes:a,zone:z,wall:w,light:l,micro:m,mr:r,wd:s.n===8?wd1:wd2}});
     cards[1](cs);openIdx[1](null);
   };
-  var copyAll=function(){var h=shots[0].map(function(_,i){return"shot-"+(i+1)+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");navigator.clipboard.writeText(h+"\n"+v)};
-  var downloadCSV=function(){var h=shots[0].map(function(_,i){return"shot-"+(i+1)+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");var csv=h+"\n"+v;var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="babyshop_"+tier[0]+"_"+selCat[0].replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)};
+  var copyAll=function(){var fs=shotsForCategory(selCat[0]);var h=fs.map(function(s){return"shot-"+s.n+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");navigator.clipboard.writeText(h+"\n"+v)};
+  var downloadCSV=function(){var fs=shotsForCategory(selCat[0]);var h=fs.map(function(s){return"shot-"+s.n+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");var csv=h+"\n"+v;var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="babyshop_"+tier[0]+"_"+selCat[0].replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)};
 
   // ═══ SUPABASE WRITE OPERATIONS ═══
   var saveItem=function(poolKey,item,isAdd,origKey){
@@ -498,7 +505,7 @@ function App(){
       [["Aesthetic",curAes[0],mAes,"id","label"],["Zone",zones[0],mZone,"id","label"],["Wall",curWalls[0],mWall,"id","label"],["Lighting",curLights[0],mLight,"id","label"],["Micro-realism",curMicros[0],mMicro,"id","label"],["Model Region",mrs[0],mMr,"id","label"],["Wardrobe",wds[0],mWd,"id","label"]].map(function(arr){return E("div",{key:arr[0]},E("span",{className:"ctrl-label"},arr[0]),E("select",{className:"ctrl-select",value:arr[2][0],onChange:function(e){arr[2][1](e.target.value)}},E("option",{value:"_r"},"\uD83C\uDFB2 Random"),arr[1].map(function(x){return E("option",{key:x[arr[3]]||x.name,value:x[arr[3]]||x.name},x[arr[4]]||x.name)})))})
     ),
     E("div",{className:"divider"}),
-    E("button",{className:"gen-btn"+tierCls,onClick:gen},"\u2728 Generate "+shots[0].length+" Shots"),
+    E("button",{className:"gen-btn"+tierCls,onClick:gen},"\u2728 Generate "+shotsForCategory(selCat[0]).length+" Shots"),
     cards[0].length>0&&E(React.Fragment,null,E("button",{className:"csv-btn"+tierCls,onClick:copyAll},"\uD83D\uDCCB Copy CSV"),E("button",{className:"csv-btn"+tierCls,onClick:downloadCSV},"\uD83D\uDCE5 Download CSV"))
   );
 
