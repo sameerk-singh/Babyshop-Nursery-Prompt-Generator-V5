@@ -260,6 +260,15 @@ var KEY_FIELD=function(poolKey){return poolKey==="cats"?"name":"id"};
 // Figure out type (for field translation) by pool key
 function poolType(poolKey){return poolKey}
 
+// ═══ PILLOW FAMILY — in-crib staging override ═══
+// These products are styled INSIDE a crib mattress with crib slats framing the scene
+// rather than on stools/floors/wall corners. Auto-injects in-crib zone, camera, and negatives.
+var PILLOW_FAMILY={"Pillow":1,"Feeding Pillow":1,"Bolster Set":1,"Comforter Set":1,"Cradle Bedding Set":1,"Cot Fitted Sheet":1,"Bassinet Bedding":1,"Sleeping Pod":1,"Sleeping Bag":1,"Receiving Blanket":1,"Swaddle Blanket":1,"Nest Bag":1};
+var isPillowFamily=function(catName){return PILLOW_FAMILY.hasOwnProperty(catName)};
+
+// Locked in-crib zone object — overrides user zone selection for pillow-family products
+var IN_CRIB_ZONE={id:"in_crib",label:"Crib Mattress \u2014 In Crib (locked)",desc:"Inside a real-home baby crib. Crib mattress finished in soft cream-ivory fitted cotton sheet with subtle natural texture, surface clean and slightly luminous. Two to three vertical crib slats in soft natural light wood (oak or birch tone) visible at the back edge of the frame, softly defocused but recognizably crib slats \u2014 framing the scene and providing nursery context. No full crib structure, no headboard, no cot frame top \u2014 just the mattress plane and slats at the back edge."};
+
 function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   var catObj=cats.find(function(c){return c.name===cat})||cats[0];
   var isLarge=catObj.size==="large";
@@ -267,6 +276,8 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   var sn=shot.n;
   var t="";
   var isT2=false;  // tier system removed; all tones use editorial-quality prompt language
+  var inCrib=isPillowFamily(cat);
+  if(inCrib) zone=IN_CRIB_ZONE;  // hard override — pillow family always stages in-crib
 
   if(sn===1){
     if(isT2){
@@ -291,6 +302,9 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
       if(isLarge) t+="Place "+cat+" against the wall, not floating in the middle of the room.\n";
       t+="Product centered in frame for square and portrait crop safety.\n\n";
     }
+    if(inCrib){
+      t+="IN-CRIB STAGING (LOCKED — PILLOW FAMILY)\nThe "+cat.toUpperCase()+" must be placed flat ON the crib mattress surface as the hero of the frame \u2014 NOT on a stool, chair, bench, table, floor, shelf, or against a wall.\nThe crib mattress is the staging surface. Two to three vertical crib slats in soft natural light wood are visible at the back edge of the frame, softly defocused, providing unmistakable nursery context.\nProduct settles naturally into the mattress with a slight angle to camera so the front face and a sliver of the side seam read clearly. Embroidery, ears, piping, and stitching from the reference image must render with full fidelity.\nSecondary props (styled around the product, never crowding it):\n- One small plush companion toy in cream/ivory tones placed in the upper corner of the mattress, partially out of frame, providing scale and warmth.\n- One soft knit baby blanket in muted blush-pink or warm cream, draped diagonally across one corner of the mattress with natural folds, hem trailing partially off the frame edge.\nProps stay secondary. The product is unambiguously the hero. Real-home, lived-in, PDP-ready \u2014 not a styled vignette in an empty room corner.\n\n";
+    }
   }else{
     t+="ENVIRONMENT \u2014 LOCKED TO SHOT 1 WORLD\nSame "+aes.label+" environment as Shot 1. Do not change the room, wall, floor, or lighting.\nOnly camera angle and crop change.\n\n";
   }
@@ -314,7 +328,8 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }
 
   t+="CAMERA & LENS\n";
-  if(sn===1) t+="Camera: 45-degree perspective, "+lens+" lens, f/8-f/11, product centered, corrected verticals.\n";
+  if(sn===1 && inCrib) t+="Camera: positioned slightly above the crib mattress surface looking down at a soft 30\u201340 degree top-down three-quarter angle toward the product. 50mm prime, f/2.8, controlled shallow depth of field \u2014 product tack-sharp, mattress surface and surrounding props falling into very gentle softness toward the edges. Tight three-quarter mattress crop with crib slats softly defocused at the back edge of the frame.\n";
+  else if(sn===1) t+="Camera: 45-degree perspective, "+lens+" lens, f/8-f/11, product centered, corrected verticals.\n";
   else if(sn===2) t+="Camera: STRAIGHT-ON FRONT VIEW, dead-center, facing product head-on. "+lens+", f/8. Zero angle, zero rotation, zero perspective. Product front parallel to camera sensor. Composition is flat and symmetrical like a catalog main image.\n";
   else if(sn===3) t+="Camera: eye-level, 50mm, f/8-f/11, product fills 80%+ of frame, minimal environment.\n";
   else if(sn===4||sn===5) t+="Camera: close-up macro, 85-100mm, f/4-f/5.6, shallow depth, isolate detail.\n";
@@ -337,6 +352,8 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   t+="\nNEGATIVE PROMPT\nNO generating or inventing product details. NO altering product color, shape, or material from input image. NO CGI LOOK, NO 3D render LOOK, NO illustration, no distortion.";
   if(isT2) t+=" NO saturated accent walls, NO mural wallpapers, NO editorial/campaign moodboard styling, NO over-styled props, NO dramatic lighting, NO golden hour mood.";
   else t+=" No busy backgrounds, no cheap prop overload.";
+  if(inCrib) t+=" NO product on stool, NO product on chair, NO product on bench, NO product on table, NO product on shelf, NO product against wall, NO product upright on a flat surface, NO empty-room corner staging, NO wall murals or wall art behind the product, NO floor visible, NO baseboards, NO room corners, NO full crib frame visible, NO headboard, NO cot top edge in frame.";
+  if(inCrib && sn===1) t+=" NO 90-degree flat-lay overhead angle on this shot (must be three-quarter top-down).";
 
   return t;
 }
@@ -439,6 +456,7 @@ function App(){
     if(!curAes[0].length||!curWalls[0].length||!curLights[0].length||!curMicros[0].length){alert("No "+activeTone+"-tone entries available in one of the pools. Add some via Resources, or pick a different tone.");return}
     var co=cats[0].find(function(c){return c.name===selCat[0]});if(!co)return;
     var a=resolve(curAes[0],mAes[0]),z=resolve(zones[0],mZone[0]),w=resolve(curWalls[0],mWall[0]),l=resolve(curLights[0],mLight[0]),m=resolve(curMicros[0],mMicro[0]),r=resolve(mrs[0],mMr[0]);
+    if(isPillowFamily(selCat[0])) z=IN_CRIB_ZONE;  // mirror the makePrompt override for chip display
     var wd1=resolve(wds[0],mWd[0]);
     var others=wds[0].filter(function(x){return(x.id||x.name)!==(wd1.id||wd1.name)});
     var wd2=others.length?pk(others):wd1;
@@ -594,6 +612,7 @@ function App(){
 
   var leftPanel=E("div",{className:"panel-left"},
     E("div",{className:"ctrl-section"},E("span",{className:"ctrl-label"},"Product Category"),E("select",{className:"ctrl-select",value:selCat[0],onChange:function(e){selCat[1](e.target.value)}},cats[0].map(function(c){return E("option",{key:c.name,value:c.name},c.name+" ("+c.size+")"+(c.ip_strength!=="0.75"?" \u26A0 "+c.ip_strength:""))}))),
+    isPillowFamily(selCat[0])&&E("div",{className:"info-bar cloud",style:{margin:"8px 0",padding:"10px 14px",background:"#fef3c7",borderLeft:"3px solid #f59e0b",fontSize:"12px",color:"#78350f",borderRadius:"4px"}},"\uD83D\uDECF\uFE0F In-crib staging locked \u2014 "+selCat[0]+" will be staged on a crib mattress with crib slats framing the scene. Zone selection below is overridden."),
     E("div",{className:"divider"}),
     E("div",{className:"ctrl-section"},E("span",{className:"ctrl-label"},"Environment Mode"),E("div",{className:"mode-pills"},E("button",{className:"mode-pill"+(mode[0]==="random"?" active"+tierCls:""),onClick:function(){mode[1]("random")}},"\uD83C\uDFB2 Random"),E("button",{className:"mode-pill"+(mode[0]==="manual"?" active"+tierCls:""),onClick:function(){mode[1]("manual")}},"\uD83C\uDFDB Manual"))),
     mode[0]==="manual"&&E("div",{className:"manual-grid"},
