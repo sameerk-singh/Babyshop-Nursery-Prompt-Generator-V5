@@ -54,6 +54,10 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 .tier-btn.active.t2{background:var(--t2)}
 .tier-desc{font-size:11px;color:var(--muted);font-style:italic}
 
+
+.tier-btn.active.warm{background:#C77B5C}
+.hdr-badge{transition:all .15s}
+.tone-info{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:0 4px}
 .nav{display:flex;background:#fff;border-bottom:1px solid var(--light-border);position:sticky;top:0;z-index:50}
 .nav-btn{flex:1;padding:12px 0;border:none;background:none;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;position:relative}
 .nav-btn.active{color:var(--c1);font-weight:600}
@@ -238,13 +242,13 @@ var KEY_FIELD=function(poolKey){return poolKey==="cats"?"name":"id"};
 // Figure out type (for field translation) by pool key
 function poolType(poolKey){return poolKey}
 
-function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tier,cats){
+function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   var catObj=cats.find(function(c){return c.name===cat})||cats[0];
   var isLarge=catObj.size==="large";
   var lens=isLarge?"35mm":"50mm";
   var sn=shot.n;
   var t="";
-  var isT2=tier==="t2";
+  var isT2=false;  // tier system removed; all tones use editorial-quality prompt language
 
   if(sn===1){
     if(isT2){
@@ -320,7 +324,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tier,cats){
 }
 
 function App(){
-  var tier=uS("t1"),tab=uS("gen");
+  var tab=uS("gen"),toneOverride=uS("auto");
   var loading=uS(true),syncState=uS("synced"),loadError=uS(null);
   var authed=uS(isAuthed()),loginOpen=uS(false),loginPw=uS(""),loginErr=uS("");
   // Data pools — all start empty, populated from Supabase
@@ -370,10 +374,24 @@ function App(){
       });
   }
 
-  var isT2=tier[0]==="t2";
-  var curAes=isT2?aes2:aes, curWalls=isT2?walls2:walls, curLights=isT2?lights2:lights, curMicros=isT2?micros2:micros;
+  // ═══ TONE SYSTEM ═══
+  // Auto-detect tone from selected category, allow manual override
+  var selCatObj=cats[0].find(function(c){return c.name===selCat[0]});
+  var autoTone=(selCatObj&&selCatObj.default_tone)||"neutral";
+  var activeTone=toneOverride[0]==="auto"?autoTone:toneOverride[0];
+  // Filter helper: keep entries whose tones array includes the active tone
+  // (entries without tones array default to ['neutral'] for safety)
+  function inTone(x){var t=x.tones||["neutral"];return t.indexOf(activeTone)!==-1}
+  // Merge T1+T2 pools and filter by active tone
+  var curAes=[aes[0].concat(aes2[0]).filter(inTone)];
+  var curWalls=[walls[0].concat(walls2[0]).filter(inTone)];
+  var curLights=[lights[0].concat(lights2[0]).filter(inTone)];
+  var curMicros=[micros[0].concat(micros2[0]).filter(inTone)];
+  // Visual styling: warm uses default teal, colorful uses brown accent (formerly t2), neutral uses default
+  var isWarm=activeTone==="warm",isColorful=activeTone==="colorful",isNeutral=activeTone==="neutral";
+  var isT2=isColorful;  // legacy alias used in prompt builder for "saturated" branch — now triggers on colorful
 
-  uE(function(){mAes[1]("_r");mWall[1]("_r");mLight[1]("_r");mMicro[1]("_r")},[tier[0]]);
+  uE(function(){mAes[1]("_r");mWall[1]("_r");mLight[1]("_r");mMicro[1]("_r")},[activeTone]);
 
   var poolMap={
     aes:{d:aes[0],s:aes[1],l:"Aesthetics (T1)"},
@@ -400,17 +418,18 @@ function App(){
 
   var gen=function(){
     if(!cats[0].length||!aes[0].length||!aes2[0].length){alert("Data still loading. Try again in a moment.");return}
+    if(!curAes[0].length||!curWalls[0].length||!curLights[0].length||!curMicros[0].length){alert("No "+activeTone+"-tone entries available in one of the pools. Add some via Resources, or pick a different tone.");return}
     var co=cats[0].find(function(c){return c.name===selCat[0]});if(!co)return;
     var a=resolve(curAes[0],mAes[0]),z=resolve(zones[0],mZone[0]),w=resolve(curWalls[0],mWall[0]),l=resolve(curLights[0],mLight[0]),m=resolve(curMicros[0],mMicro[0]),r=resolve(mrs[0],mMr[0]);
     var wd1=resolve(wds[0],mWd[0]);
     var others=wds[0].filter(function(x){return(x.id||x.name)!==(wd1.id||wd1.name)});
     var wd2=others.length?pk(others):wd1;
     var filteredShots=shotsForCategory(selCat[0]);
-    var cs=filteredShots.map(function(s){return{shot:s,prompt:makePrompt(selCat[0],s,a,z,w,l,m,r,s.n===8?wd1:wd2,tier[0],cats[0]),aes:a,zone:z,wall:w,light:l,micro:m,mr:r,wd:s.n===8?wd1:wd2}});
+    var cs=filteredShots.map(function(s){return{shot:s,prompt:makePrompt(selCat[0],s,a,z,w,l,m,r,s.n===8?wd1:wd2,activeTone,cats[0]),aes:a,zone:z,wall:w,light:l,micro:m,mr:r,wd:s.n===8?wd1:wd2}});
     cards[1](cs);openIdx[1](null);
   };
   var copyAll=function(){var fs=shotsForCategory(selCat[0]);var h=fs.map(function(s){return"shot-"+s.n+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");navigator.clipboard.writeText(h+"\n"+v)};
-  var downloadCSV=function(){var fs=shotsForCategory(selCat[0]);var h=fs.map(function(s){return"shot-"+s.n+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");var csv=h+"\n"+v;var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="babyshop_"+tier[0]+"_"+selCat[0].replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)};
+  var downloadCSV=function(){var fs=shotsForCategory(selCat[0]);var h=fs.map(function(s){return"shot-"+s.n+"-prompt"}).join(",");var v=cards[0].map(function(c){return'"'+c.prompt.replace(/"/g,'""')+'"'}).join(",");var csv=h+"\n"+v;var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="babyshop_"+activeTone+"_"+selCat[0].replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)};
 
   // ═══ SUPABASE WRITE OPERATIONS ═══
   var saveItem=function(poolKey,item,isAdd,origKey){
@@ -528,17 +547,16 @@ function App(){
         ? E("button",{className:"auth-btn authed",onClick:doLogout,title:"Editor logged in \u2014 click to log out"},"\uD83D\uDD13 Editor")
         : E("button",{className:"auth-btn",onClick:function(){loginOpen[1](true)},title:"Log in to edit taxonomy"},"\uD83D\uDD12 Login"),
       E("div",{className:"sync-indicator"+syncCls,title:loadError[0]||""},E("span",{className:"sync-dot"}),E("span",null,syncText)),
-      E("div",{className:"hdr-badge"},isT2?"Tier 2 \u2014 PDP Ecom":"Tier 1 \u2014 Editorial")
+      E("div",{className:"hdr-badge"},activeTone.toUpperCase()+" tone")
     )
   );
 
+  var toneOpts=[{v:"auto",l:"Auto"},{v:"warm",l:"\uD83D\uDD25 Warm"},{v:"neutral",l:"\u26AA Neutral"},{v:"colorful",l:"\uD83C\uDF08 Colorful"}];
+  var toneDescs={warm:"Warm wood tones, terracotta, golden hour \u2014 traditional furniture and storybook nurseries",neutral:"Soft pale palette, restrained styling \u2014 textiles, bedding, and refined editorial looks",colorful:"Pastel rainbows, sage and blush, mural walls \u2014 plastic toys and play products"};
   var tierBar=E("div",{className:"tier-bar"},
-    E("span",{className:"tier-label"},"Output Tier"),
-    E("div",{className:"tier-toggle"},
-      E("button",{className:"tier-btn"+(tier[0]==="t1"?" active":""),onClick:function(){tier[1]("t1")}},"Tier 1 \u2014 Editorial"),
-      E("button",{className:"tier-btn"+(tier[0]==="t2"?" active t2":""),onClick:function(){tier[1]("t2")}},"Tier 2 \u2014 PDP Ecom")
-    ),
-    E("span",{className:"tier-desc"},isT2?"Subdued real-home aesthetics, product-forward, ecommerce-ready":"Elevated editorial aesthetics with architectural character and variety")
+    E("span",{className:"tier-label"},"Tone"),
+    E("div",{className:"tier-toggle"},toneOpts.map(function(o){return E("button",{key:o.v,className:"tier-btn"+(toneOverride[0]===o.v?(" active"+(o.v==="colorful"?" t2":(o.v==="warm"?" warm":""))):""),onClick:function(){toneOverride[1](o.v)}},o.l)})),
+    E("span",{className:"tier-desc"},toneOverride[0]==="auto"?("Auto-detected from "+(selCat[0]||"category")+": "+autoTone.toUpperCase()+" \u2014 "+(toneDescs[autoTone]||"")):(toneDescs[activeTone]||""))
   );
 
   var nav=E("div",{className:"nav"},["gen","res","imp"].map(function(t,i){return E("button",{key:t,className:"nav-btn"+(tab[0]===t?" active"+tierCls:""),onClick:function(){tab[1](t)}},["Generator","Resources","Import"][i])}));
@@ -556,7 +574,7 @@ function App(){
   );
 
   var rightPanel=E("div",{className:"panel-right"},
-    cards[0].length===0?E("div",{className:"empty-state"},E("div",{className:"empty-icon"+tierCls},"\uD83C\uDFAF"),E("div",{className:"empty-title"},"Ready to generate "+(isT2?"Tier 2 PDP":"Tier 1 editorial")+" prompts"),E("div",{className:"empty-sub"},"Select a product category and click Generate to create 9 "+(isT2?"ecom-ready":"editorial")+" prompt shots")):
+    cards[0].length===0?E("div",{className:"empty-state"},E("div",{className:"empty-icon"+tierCls},"\uD83C\uDFAF"),E("div",{className:"empty-title"},"Ready to generate "+activeTone.toUpperCase()+" tone prompts"),E("div",{className:"empty-sub"},"Select a product category and click Generate to create your prompt sequence")):
     cards[0].map(function(c,i){return E("div",{key:i,className:"p-card"+tierCls},E("div",{className:"p-card-hdr",onClick:function(){openIdx[1](openIdx[0]===i?null:i)}},E("div",{className:"p-card-left"},E("span",{className:"p-card-num"+tierCls},c.shot.n),E("span",{className:"p-card-title"},c.shot.label)),E("span",{className:"p-card-tag"+tierCls},c.shot.short)),openIdx[0]===i&&E("div",{className:"p-card-body"},E("div",{className:"p-card-chips"},E("span",{className:"chip chip-env"},c.aes.label),E("span",{className:"chip chip-env"},c.zone.label),E("span",{className:"chip chip-env"},c.wall.label),E("span",{className:"chip chip-env"},c.light.label),c.shot.n===8&&E(React.Fragment,null,E("span",{className:"chip chip-model"},c.mr.label),E("span",{className:"chip chip-model"},c.wd.label),E("span",{className:"chip chip-micro"},c.micro.label))),E("div",{className:"prompt-box"+tierCls},E("button",{className:"copy-btn"+tierCls,onClick:function(){navigator.clipboard.writeText(c.prompt)}},"\uD83D\uDCCB Copy"),c.prompt)))})
   );
 
@@ -578,7 +596,7 @@ function App(){
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F All changes save to cloud and sync to the whole team instantly. T1 and T2 pools are separate. Zones, Model Regions, Wardrobes, and Categories are shared across tiers."),
     E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0]||!authed[0],onClick:function(){if(!authed[0]){loginOpen[1](true);return}editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
     E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,authed[0]?"Actions":""))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,authed[0]?E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del")):null))}))),
-    editItem[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget&&!saving[0]){editItem[1](null);addMode[1](false)}}},E("div",{className:"modal"},E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),E("div",{className:"modal-body"},Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"}).map(function(k){return E("div",{key:k},E("label",{className:"f-label"},k),(editItem[0][k]||"").length>60?E("textarea",{className:"f-textarea",rows:3,value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}):E("input",{className:"f-input",value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}))})),E("div",{className:"modal-footer"},E("button",{className:"save-btn"+tierCls,disabled:saving[0],onClick:function(){saveItem(rt[0],editItem[0],addMode[0],editItem[0]._origKey).then(function(){editItem[1](null);addMode[1](false)})}},saving[0]?"Saving\u2026":"Save"),E("button",{className:"cancel-btn",disabled:saving[0],onClick:function(){editItem[1](null);addMode[1](false)}},"Cancel"))))
+    editItem[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget&&!saving[0]){editItem[1](null);addMode[1](false)}}},E("div",{className:"modal"},E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),E("div",{className:"modal-body"},Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"&&k!=="tones"}).map(function(k){return E("div",{key:k},E("label",{className:"f-label"},k),(editItem[0][k]||"").length>60?E("textarea",{className:"f-textarea",rows:3,value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}):E("input",{className:"f-input",value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}))})),E("div",{className:"modal-footer"},E("button",{className:"save-btn"+tierCls,disabled:saving[0],onClick:function(){saveItem(rt[0],editItem[0],addMode[0],editItem[0]._origKey).then(function(){editItem[1](null);addMode[1](false)})}},saving[0]?"Saving\u2026":"Save"),E("button",{className:"cancel-btn",disabled:saving[0],onClick:function(){editItem[1](null);addMode[1](false)}},"Cancel"))))
   );
 
   var impTab=E("div",{className:"full-panel"},
