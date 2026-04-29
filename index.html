@@ -55,6 +55,14 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 .tier-desc{font-size:11px;color:var(--muted);font-style:italic}
 
 
+.tone-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.tone-chip{padding:7px 14px;border-radius:18px;font-family:var(--font-body);font-size:12px;font-weight:600;border:1.5px solid var(--light-border);background:#fff;color:var(--muted);cursor:pointer;transition:all .15s}
+.tone-chip:hover{border-color:var(--c2);color:var(--c1)}
+.tone-chip.active{color:#fff;border-color:transparent}
+.tone-chip.active.warm{background:#C77B5C}
+.tone-chip.active.neutral{background:var(--c1)}
+.tone-chip.active.colorful{background:var(--t2)}
+.tone-help{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
 .tier-btn.active.warm{background:#C77B5C}
 .hdr-badge{transition:all .15s}
 .tone-info{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:0 4px}
@@ -591,12 +599,70 @@ function App(){
     E("button",{onClick:function(){loginOpen[1](true)}},"Login")
   );
 
+  // Pool-aware tone editing
+  // - Aesthetics/walls/lighting/micros: multi-select chip array (tones[])
+  // - Categories: single-select dropdown (default_tone string)
+  // - Zones/model_regions/wardrobes: no tone field
+  var POOL_USES_TONES_ARRAY={aes:1,aes2:1,walls:1,walls2:1,lights:1,lights2:1,micros:1,micros2:1};
+  var POOL_USES_DEFAULT_TONE={cats:1};
+  var ALL_TONES=[{v:"warm",l:"\uD83D\uDD25 Warm"},{v:"neutral",l:"\u26AA Neutral"},{v:"colorful",l:"\uD83C\uDF08 Colorful"}];
+
+  function toggleTone(tones,t){
+    var arr=Array.isArray(tones)?tones.slice():["neutral"];
+    var i=arr.indexOf(t);
+    if(i!==-1){if(arr.length>1)arr.splice(i,1);else return arr;}else arr.push(t);
+    return arr;
+  }
+  function itemTones(item){return Array.isArray(item.tones)?item.tones:["neutral"]}
+
+  var editModal=editItem[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget&&!saving[0]){editItem[1](null);addMode[1](false)}}},
+    E("div",{className:"modal"},
+      E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),
+      E("div",{className:"modal-body"},
+        Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"&&k!=="tones"&&k!=="default_tone"}).map(function(k){
+          return E("div",{key:k},
+            E("label",{className:"f-label"},k),
+            (editItem[0][k]||"").length>60
+              ? E("textarea",{className:"f-textarea",rows:3,value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}})
+              : E("input",{className:"f-input",value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}})
+          );
+        }),
+        POOL_USES_TONES_ARRAY[rt[0]]&&E("div",null,
+          E("label",{className:"f-label"},"Tones (which tone groups this entry belongs to)"),
+          E("div",{className:"tone-chip-row"},ALL_TONES.map(function(t){
+            var active=itemTones(editItem[0]).indexOf(t.v)!==-1;
+            return E("button",{key:t.v,className:"tone-chip"+(active?" active "+t.v:""),onClick:function(){
+              var newTones=toggleTone(itemTones(editItem[0]),t.v);
+              editItem[1](Object.assign({},editItem[0],{tones:newTones}));
+            }},t.l);
+          })),
+          E("div",{className:"tone-help"},"At least one tone must be selected. Tap to toggle.")
+        ),
+        POOL_USES_DEFAULT_TONE[rt[0]]&&E("div",null,
+          E("label",{className:"f-label"},"Default Tone (auto-selected when this category is picked)"),
+          E("select",{className:"f-input",value:editItem[0].default_tone||"neutral",onChange:function(e){editItem[1](Object.assign({},editItem[0],{default_tone:e.target.value}))}},
+            ALL_TONES.map(function(t){return E("option",{key:t.v,value:t.v},t.l)})
+          )
+        )
+      ),
+      E("div",{className:"modal-footer"},
+        E("button",{className:"save-btn"+tierCls,disabled:saving[0],onClick:function(){
+          var toSave=Object.assign({},editItem[0]);
+          if(POOL_USES_TONES_ARRAY[rt[0]]&&!Array.isArray(toSave.tones))toSave.tones=["neutral"];
+          if(POOL_USES_DEFAULT_TONE[rt[0]]&&!toSave.default_tone)toSave.default_tone="neutral";
+          saveItem(rt[0],toSave,addMode[0],toSave._origKey).then(function(){editItem[1](null);addMode[1](false)});
+        }},saving[0]?"Saving\u2026":"Save"),
+        E("button",{className:"cancel-btn",disabled:saving[0],onClick:function(){editItem[1](null);addMode[1](false)}},"Cancel")
+      )
+    )
+  );
+
   var resTab=E("div",{className:"full-panel"},
     lockBanner,
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F All changes save to cloud and sync to the whole team instantly. T1 and T2 pools are separate. Zones, Model Regions, Wardrobes, and Categories are shared across tiers."),
     E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0]||!authed[0],onClick:function(){if(!authed[0]){loginOpen[1](true);return}editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
     E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,authed[0]?"Actions":""))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,authed[0]?E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del")):null))}))),
-    editItem[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget&&!saving[0]){editItem[1](null);addMode[1](false)}}},E("div",{className:"modal"},E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),E("div",{className:"modal-body"},Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"&&k!=="tones"}).map(function(k){return E("div",{key:k},E("label",{className:"f-label"},k),(editItem[0][k]||"").length>60?E("textarea",{className:"f-textarea",rows:3,value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}):E("input",{className:"f-input",value:editItem[0][k]||"",onChange:function(e){var o={};o[k]=e.target.value;editItem[1](Object.assign({},editItem[0],o))}}))})),E("div",{className:"modal-footer"},E("button",{className:"save-btn"+tierCls,disabled:saving[0],onClick:function(){saveItem(rt[0],editItem[0],addMode[0],editItem[0]._origKey).then(function(){editItem[1](null);addMode[1](false)})}},saving[0]?"Saving\u2026":"Save"),E("button",{className:"cancel-btn",disabled:saving[0],onClick:function(){editItem[1](null);addMode[1](false)}},"Cancel"))))
+    editModal
   );
 
   var impTab=E("div",{className:"full-panel"},
