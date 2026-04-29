@@ -42,6 +42,16 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 .lock-banner-text strong{color:var(--dark)}
 .lock-banner button{padding:6px 14px;border:none;border-radius:6px;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;background:var(--c1);color:#fff;white-space:nowrap}
 .lock-banner.t2 button{background:var(--t2)}
+.login-card{background:#fff;border-radius:var(--radius-lg);padding:36px 32px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.12);text-align:center}
+.login-logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#2a3f40,var(--c1));color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:700;margin:0 auto 16px}
+.login-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-.02em}
+.login-sub{font-family:var(--font-body);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.login-desc{font-size:12px;color:var(--mid);margin:18px 0 14px;line-height:1.5}
+.login-input{width:100%;padding:12px 14px;border:1.5px solid var(--light-border);border-radius:var(--radius);font-family:var(--font-body);font-size:14px;text-align:center;transition:border-color .15s}
+.login-input:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 3px rgba(56,128,135,.12)}
+.login-err{font-size:12px;color:#b44;margin-top:10px;font-weight:500}
+.login-btn{width:100%;padding:11px;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;background:var(--c1);color:#fff;margin-top:14px;transition:all .15s}
+.login-btn:hover{background:#2d6b70;transform:translateY(-1px);box-shadow:0 4px 12px rgba(56,128,135,.25)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .hdr-badge{background:var(--c4);color:var(--dark);font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase}
 .hdr.tier2 .hdr-badge{background:var(--t2-light);color:var(--t2)}
@@ -441,7 +451,6 @@ function App(){
 
   // ═══ SUPABASE WRITE OPERATIONS ═══
   var saveItem=function(poolKey,item,isAdd,origKey){
-    if(!authed[0]){loginOpen[1](true);return Promise.reject(new Error("Login required"))}
     saving[1](true);
     syncState[1]("syncing");
     var table=TABLE_MAP[poolKey];
@@ -466,7 +475,6 @@ function App(){
   };
 
   var deleteItem=function(poolKey,item){
-    if(!authed[0]){loginOpen[1](true);return}
     syncState[1]("syncing");
     var table=TABLE_MAP[poolKey];
     var keyField=KEY_FIELD(poolKey);
@@ -484,7 +492,6 @@ function App(){
   };
 
   var doImport=function(){
-    if(!authed[0]){loginOpen[1](true);return}
     try{
       var data=JSON.parse(impText[0]);
       if(!Array.isArray(data)){impStatus[1]("err:Must be a JSON array");return}
@@ -522,7 +529,6 @@ function App(){
       if(h===EDITOR_PASS_HASH){
         setAuthed(true);
         authed[1](true);
-        loginOpen[1](false);
         loginPw[1]("");
         loginErr[1]("");
       }else{
@@ -533,11 +539,30 @@ function App(){
   var doLogout=function(){
     setAuthed(false);
     authed[1](false);
+    loginPw[1]("");
+    loginErr[1]("");
   };
 
   var tierCls=isT2?" t2":"";
   var syncCls=syncState[0]==="syncing"?" syncing":(syncState[0]==="error"?" error":(syncState[0]==="offline"?" offline":""));
   var syncText=syncState[0]==="syncing"?"Syncing\u2026":(syncState[0]==="error"?"Sync error":(syncState[0]==="offline"?"Offline (local only)":"Cloud synced"));
+
+  // Auth gate \u2014 show login screen if not authenticated (covers entire app)
+  if(!authed[0]){
+    return E("div",{className:"loading-overlay"},
+      E("div",{className:"login-card"},
+        E("div",{className:"login-logo"},"B"),
+        E("div",{className:"login-title"},"Babyshop Nursery"),
+        E("div",{className:"login-sub"},"AI Prompt Generator V5"),
+        E("div",{className:"login-desc"},"Team password required to continue."),
+        E("input",{className:"login-input",type:"password",placeholder:"Enter team password",value:loginPw[0],autoFocus:true,
+          onChange:function(e){loginPw[1](e.target.value);if(loginErr[0])loginErr[1]("")},
+          onKeyDown:function(e){if(e.key==="Enter")doLogin()}}),
+        loginErr[0]&&E("div",{className:"login-err"},loginErr[0]),
+        E("button",{className:"login-btn",onClick:doLogin},"Sign In")
+      )
+    );
+  }
 
   // Loading overlay
   if(loading[0]){
@@ -551,9 +576,7 @@ function App(){
   var header=E("div",{className:"hdr"+tierCls},
     E("div",{className:"hdr-left"},E("div",{className:"logo-mark"},"B"),E("div",null,E("div",{className:"logo-text"},"Babyshop Nursery"),E("div",{className:"logo-sub"},"AI Prompt Generator V5"))),
     E("div",{className:"hdr-right"},
-      authed[0]
-        ? E("button",{className:"auth-btn authed",onClick:doLogout,title:"Editor logged in \u2014 click to log out"},"\uD83D\uDD13 Editor")
-        : E("button",{className:"auth-btn",onClick:function(){loginOpen[1](true)},title:"Log in to edit taxonomy"},"\uD83D\uDD12 Login"),
+      E("button",{className:"auth-btn authed",onClick:doLogout,title:"Click to log out"},"\uD83D\uDD13 Logout"),
       E("div",{className:"sync-indicator"+syncCls,title:loadError[0]||""},E("span",{className:"sync-dot"}),E("span",null,syncText)),
       E("div",{className:"hdr-badge"},activeTone.toUpperCase()+" tone")
     )
@@ -592,12 +615,6 @@ function App(){
     if(poolKey==="cats")return{name:"",size:"medium",accuracy:"",interaction:"",ip_strength:"0.75"};
     return{id:"",label:"",desc:""};
   };
-
-  var lockBanner=!authed[0]&&E("div",{className:"lock-banner"+tierCls},
-    E("div",{className:"lock-banner-icon"},"\uD83D\uDD12"),
-    E("div",{className:"lock-banner-text"},E("strong",null,"View-only mode."),E("br"),"You can browse the taxonomy but cannot add, edit, delete, or import. Log in to unlock editing."),
-    E("button",{onClick:function(){loginOpen[1](true)}},"Login")
-  );
 
   // Pool-aware tone editing
   // - Aesthetics/walls/lighting/micros: multi-select chip array (tones[])
@@ -658,46 +675,22 @@ function App(){
   );
 
   var resTab=E("div",{className:"full-panel"},
-    lockBanner,
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F All changes save to cloud and sync to the whole team instantly. T1 and T2 pools are separate. Zones, Model Regions, Wardrobes, and Categories are shared across tiers."),
-    E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0]||!authed[0],onClick:function(){if(!authed[0]){loginOpen[1](true);return}editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
-    E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,authed[0]?"Actions":""))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,authed[0]?E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del")):null))}))),
+    E("div",{className:"toolbar"},E("select",{className:"ctrl-select",value:rt[0],onChange:function(e){rt[1](e.target.value);sq[1]("")}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l+" ("+p[1].d.length+")")})),E("input",{className:"search-input",placeholder:"Search...",value:sq[0],onChange:function(e){sq[1](e.target.value)}}),E("button",{className:"add-btn"+tierCls,disabled:saving[0],onClick:function(){editItem[1](templateFor(rt[0]));addMode[1](true)}},"+  Add")),
+    E("table",{className:"r-table"},E("thead",null,E("tr",null,E("th",null,"ID"),E("th",null,"Label"),E("th",null,"Details"),E("th",null,"Actions"))),E("tbody",null,poolMap[rt[0]].d.filter(function(x){var s=sq[0].toLowerCase();return!s||JSON.stringify(x).toLowerCase().indexOf(s)!==-1}).map(function(item,i){var id=item.id||item.name;var lbl=item.label||item.name;var det=item.mood||item.desc||item.accuracy||"";return E("tr",{key:id+"_"+i},E("td",null,(id||"").substring(0,8)),E("td",null,lbl),E("td",null,(det||"").substring(0,100)+((det||"").length>100?"...":"")),E("td",null,E("div",{className:"act"},E("button",{className:"e-btn",onClick:function(){editItem[1](Object.assign({},item,{_idx:i,_origKey:id}));addMode[1](false)}},"Edit"),E("button",{className:"d-btn",onClick:function(){if(confirm("Delete "+lbl+"? This change will sync to the whole team."))deleteItem(rt[0],item)}},"Del"))))}))),
     editModal
   );
 
   var impTab=E("div",{className:"full-panel"},
-    lockBanner,
     E("div",{className:"info-bar cloud"},"\u2601\uFE0F Import and export work directly with the cloud. Imports sync to the whole team."),
     E("div",{className:"imp-section"},E("div",{className:"st"},"Export"),E("div",{style:{display:"flex",gap:8,marginTop:8,alignItems:"center"}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("button",{className:"add-btn"+tierCls,onClick:function(){var d=poolMap[impType[0]].d;navigator.clipboard.writeText(JSON.stringify(d,null,2));impStatus[1]("ok:Copied "+d.length+" entries")}},"Copy to Clipboard"))),
-    E("div",{className:"imp-section"},E("div",{className:"st"},"Import"),E("div",{style:{display:"flex",gap:8,marginTop:8}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("select",{className:"ctrl-select",style:{maxWidth:130},value:impMode[0],onChange:function(e){impMode[1](e.target.value)}},E("option",{value:"append"},"Append"),E("option",{value:"replace"},"Replace all"))),E("textarea",{className:"f-textarea",rows:8,placeholder:"Paste JSON array here...",value:impText[0],onChange:function(e){impText[1](e.target.value)},style:{marginTop:8}}),E("button",{className:"add-btn"+tierCls,style:{marginTop:8},disabled:!authed[0],onClick:doImport},authed[0]?"Import to Cloud":"\uD83D\uDD12 Login required"),impStatus[0]&&E("div",{className:"imp-status "+(impStatus[0].indexOf("ok")===0?"imp-ok":"imp-err")},impStatus[0].substring(impStatus[0].indexOf(":")+1)))
-  );
-
-  var loginModal=loginOpen[0]&&E("div",{className:"modal-overlay",onClick:function(e){if(e.target===e.currentTarget){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}}},
-    E("div",{className:"modal",style:{maxWidth:380}},
-      E("div",{className:"modal-header"},
-        E("h3",null,"\uD83D\uDD12 Editor Login"),
-        E("button",{className:"modal-close",onClick:function(){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}},"\u00D7")
-      ),
-      E("div",{className:"modal-body"},
-        E("div",{style:{fontSize:12,color:"var(--mid)",marginBottom:14,lineHeight:1.5}},"Enter the team password to unlock taxonomy editing. Generate works without login \u2014 only Resources and Import need this."),
-        E("label",{className:"f-label"},"Password"),
-        E("input",{className:"f-input",type:"password",value:loginPw[0],autoFocus:true,
-          onChange:function(e){loginPw[1](e.target.value);if(loginErr[0])loginErr[1]("")},
-          onKeyDown:function(e){if(e.key==="Enter")doLogin()}}),
-        loginErr[0]&&E("div",{style:{fontSize:12,color:"#b44",marginTop:8}},loginErr[0])
-      ),
-      E("div",{className:"modal-footer"},
-        E("button",{className:"save-btn"+tierCls,onClick:doLogin},"Unlock"),
-        E("button",{className:"cancel-btn",onClick:function(){loginOpen[1](false);loginErr[1]("");loginPw[1]("")}},"Cancel")
-      )
-    )
+    E("div",{className:"imp-section"},E("div",{className:"st"},"Import"),E("div",{style:{display:"flex",gap:8,marginTop:8}},E("select",{className:"ctrl-select",style:{maxWidth:240},value:impType[0],onChange:function(e){impType[1](e.target.value)}},Object.entries(poolMap).map(function(p){return E("option",{key:p[0],value:p[0]},p[1].l)})),E("select",{className:"ctrl-select",style:{maxWidth:130},value:impMode[0],onChange:function(e){impMode[1](e.target.value)}},E("option",{value:"append"},"Append"),E("option",{value:"replace"},"Replace all"))),E("textarea",{className:"f-textarea",rows:8,placeholder:"Paste JSON array here...",value:impText[0],onChange:function(e){impText[1](e.target.value)},style:{marginTop:8}}),E("button",{className:"add-btn"+tierCls,style:{marginTop:8},onClick:doImport},"Import to Cloud"),impStatus[0]&&E("div",{className:"imp-status "+(impStatus[0].indexOf("ok")===0?"imp-ok":"imp-err")},impStatus[0].substring(impStatus[0].indexOf(":")+1)))
   );
 
   return E("div",null,header,tierBar,nav,
     tab[0]==="gen"&&E("div",{className:"split"},leftPanel,rightPanel),
     tab[0]==="res"&&resTab,
-    tab[0]==="imp"&&impTab,
-    loginModal
+    tab[0]==="imp"&&impTab
   );
 }
 ReactDOM.createRoot(document.getElementById("root")).render(E(App));
