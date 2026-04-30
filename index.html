@@ -283,6 +283,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }
 
   t+="PRODUCT ACCURACY \u2014 INPUT IMAGE IS LAW\n"+catObj.accuracy+"\nMaintain exact color, material, construction, proportions, scale, and product truth for "+cat+".\nIP Adapter Strength: "+catObj.ip_strength+"\n\n";
+  if(catObj.surface_placement) t+="PRODUCT PLACEMENT \u2014 NON-NEGOTIABLE\n"+cat+" is "+catObj.surface_placement+".\nThis placement applies to EVERY shot in this sequence regardless of camera angle. Do not place the product on a sofa, chair, kitchen counter, bathroom surface, or any other unrelated furniture. The placement is fixed; only the camera moves.\n\n";
 
   if(sn===1){
     if(isT2){
@@ -633,7 +634,7 @@ function App(){
   // Template for new item based on pool type
   var templateFor=function(poolKey){
     if(poolKey==="aes"||poolKey==="aes2")return{id:"",label:"",mood:"",materials:"",language:""};
-    if(poolKey==="cats")return{name:"",size:"medium",accuracy:"",interaction:"",ip_strength:"0.75",varies_environment:false};
+    if(poolKey==="cats")return{name:"",size:"medium",accuracy:"",interaction:"",ip_strength:"0.75",surface_placement:"",varies_environment:false};
     return{id:"",label:"",desc:""};
   };
 
