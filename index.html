@@ -263,6 +263,16 @@ var KEY_FIELD=function(poolKey){return poolKey==="cats"?"name":"id"};
 // Figure out type (for field translation) by pool key
 function poolType(poolKey){return poolKey}
 
+// ═══ Crib-anchored categories (module scope so makePrompt can use them) ═══
+// Bedding/textiles that LIVE on/inside the crib. These should only be paired
+// with zones that imply crib presence, otherwise the AI splits the difference
+// between the placement directive ("on crib") and the zone ("on play floor")
+// and produces wide room shots with the product as a small element.
+var CRIB_ANCHORED_CATS={"Pillow":1,"Comforter Set":1,"Cot Fitted Sheet":1,"Bolster Set":1,"Mattress":1,"Sleeping Bag":1,"Bassinet Bedding":1,"Cradle Bedding Set":1};
+var CRIB_ANCHORED_ZONE_IDS={"crib_wal":1,"parent":1,"modern":1,"vintage":1,"window":1};
+var isCribAnchored=function(catName){return CRIB_ANCHORED_CATS.hasOwnProperty(catName)};
+var zonesForCategory=function(catName,allZones){if(!isCribAnchored(catName))return allZones;var f=allZones.filter(function(z){return CRIB_ANCHORED_ZONE_IDS[z.id||z.name]});return f.length?f:allZones};
+
 function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   var catObj=cats.find(function(c){return c.name===cat})||cats[0];
   var isLarge=catObj.size==="large";
@@ -294,6 +304,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
     }else{
       t+="NURSERY ENVIRONMENT / ART DIRECTION\nInterior Style: "+aes.label+" \u2014 "+aes.mood+"\nMaterials: "+aes.materials+"\nZone: "+zone.label+(zone.desc?" \u2014 "+zone.desc:"")+"\nWall: "+wall.label+" \u2014 "+wall.desc+"\nLighting: "+light.label+" \u2014 "+light.desc+"\n";
       if(isLarge) t+="Place "+cat+" against the wall, not floating in the middle of the room. Leave generous breathing room on both sides (25-30% of frame width as negative space minimum on each side) to let the environment frame the product.\n";
+      if(isCribAnchored(cat)) t+="HERO FRAMING \u2014 PRODUCT-FORWARD CROP\n"+cat+" is the hero of this shot. Crop tight to the crib so the "+cat+" fills 35-45% of the frame. The crib's interior \u2014 mattress, slats, near rail \u2014 forms the immediate context. Wall, floor, and surrounding furniture appear only as out-of-focus background or partial edge crops. This is a product photo first, room photo second. Do NOT pull back to a wide room view.\n";
       t+="Product centered in frame for square and portrait crop safety.\n\n";
     }
   }else{
@@ -323,7 +334,11 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }
 
   t+="CAMERA & LENS\n";
-  if(sn===1) t+=isLarge?"Camera: 45-degree perspective, 35mm lens (wider lens to capture environment with breathing room), f/8-f/11, product placed off-center with at least 25-30% of the frame as negative space on the sides for environmental context, corrected verticals.\n":"Camera: 45-degree perspective, "+lens+" lens, f/8-f/11, product centered, corrected verticals.\n";
+  if(sn===1){
+    if(isLarge) t+="Camera: 45-degree perspective, 35mm lens (wider lens to capture environment with breathing room), f/8-f/11, product placed off-center with at least 25-30% of the frame as negative space on the sides for environmental context, corrected verticals.\n";
+    else if(isCribAnchored(cat)) t+="Camera: 45-degree perspective from above-and-to-the-side of the crib, 50mm lens, f/5.6-f/8, camera positioned roughly 0.8-1.2 metres from the "+cat+" so the crib interior dominates the frame and the "+cat+" reads as the clear hero. Crib slats appear as foreground/edge framing. Tight editorial crop, not a wide room shot.\n";
+    else t+="Camera: 45-degree perspective, "+lens+" lens, f/8-f/11, product centered, corrected verticals.\n";
+  }
   else if(sn===2) t+="Camera: STRAIGHT-ON FRONT VIEW, dead-center, facing product head-on. "+lens+", f/8. Zero angle, zero rotation, zero perspective. Product front parallel to camera sensor. Composition is flat and symmetrical like a catalog main image.\n";
   else if(sn===3) t+="Camera: eye-level, 50mm, f/8-f/11, product fills 80%+ of frame, minimal environment.\n";
   else if(sn===4||sn===5) t+="Camera: close-up macro, 85-100mm, f/4-f/5.6, shallow depth, isolate detail.\n";
@@ -442,6 +457,7 @@ function App(){
   var ADJUSTABLE_CATEGORIES={"Crib":1,"Bouncer":1,"Walker":1,"Swing":1,"Recliner Chair":1,"Changing Table":1};
   var hasPositionShots=function(catName){return ADJUSTABLE_CATEGORIES.hasOwnProperty(catName)};
   var shotsForCategory=function(catName){return shots[0].filter(function(s){return s.n<10||hasPositionShots(catName)})};
+  // (CRIB_ANCHORED constants and isCribAnchored / zonesForCategory live at module scope above)
 
   var gen=function(){
     if(!cats[0].length||!aes[0].length||!aes2[0].length){alert("Data still loading. Try again in a moment.");return}
@@ -457,10 +473,13 @@ function App(){
     var wd2=others.length?pk(others):wd1;
     // For locked-environment products: pick zone/wall/lighting/micros once
     // For varied-environment products: re-pick per shot (manual selections still override randomization)
-    var lockedZ=resolve(zones[0],mZone[0]),lockedW=resolve(curWalls[0],mWall[0]),lockedL=resolve(curLights[0],mLight[0]),lockedM=resolve(curMicros[0],mMicro[0]);
+    // Zone pool is filtered for crib-anchored bedding so the AI doesn't conflict the
+    // placement directive ("on crib") with a zone that displaces the product (e.g. floor play).
+    var availZones=zonesForCategory(selCat[0],zones[0]);
+    var lockedZ=resolve(availZones,mZone[0]),lockedW=resolve(curWalls[0],mWall[0]),lockedL=resolve(curLights[0],mLight[0]),lockedM=resolve(curMicros[0],mMicro[0]);
     var filteredShots=shotsForCategory(selCat[0]);
     var cs=filteredShots.map(function(s){
-      var sZ=variesEnv?resolve(zones[0],mZone[0]):lockedZ;
+      var sZ=variesEnv?resolve(availZones,mZone[0]):lockedZ;
       var sW=variesEnv?resolve(curWalls[0],mWall[0]):lockedW;
       var sL=variesEnv?resolve(curLights[0],mLight[0]):lockedL;
       var sM=variesEnv?resolve(curMicros[0],mMicro[0]):lockedM;
