@@ -73,6 +73,9 @@ body{font-family:var(--font-body);background:var(--body-bg);color:var(--dark);mi
 .tone-chip.active.neutral{background:var(--c1)}
 .tone-chip.active.colorful{background:var(--t2)}
 .tone-help{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
+.checkbox-row{display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 12px;background:var(--c5);border-radius:var(--radius);border:1px solid var(--light-border);font-size:13px;color:var(--dark)}
+.checkbox-row input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:var(--c1)}
+.checkbox-row span{user-select:none}
 .tier-btn.active.warm{background:#C77B5C}
 .hdr-badge{transition:all .15s}
 .tone-info{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:0 4px}
@@ -263,6 +266,7 @@ function poolType(poolKey){return poolKey}
 function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   var catObj=cats.find(function(c){return c.name===cat})||cats[0];
   var isLarge=catObj.size==="large";
+  var variesEnv=catObj.varies_environment===true;
   var lens=isLarge?"35mm":"50mm";
   var sn=shot.n;
   var t="";
@@ -292,10 +296,10 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
       t+="Product centered in frame for square and portrait crop safety.\n\n";
     }
   }else{
-    if(isLarge){
+    if(!variesEnv){
       t+="ENVIRONMENT \u2014 LOCKED TO SHOT 1 WORLD\nSame "+aes.label+" environment as Shot 1. Do not change the room, wall, floor, or lighting.\nOnly camera angle and crop change.\n\n";
     }else{
-      t+="ENVIRONMENT \u2014 SAME AESTHETIC, FRESH SCENE\nSame overall "+aes.label+" aesthetic as the rest of the sequence \u2014 the visual language, palette, and styling vibe stay consistent.\nThis specific shot uses a different scene within that aesthetic:\nZone: "+zone.label+(zone.desc?" \u2014 "+zone.desc:"")+"\nWall: "+wall.label+" \u2014 "+wall.desc+"\nLighting: "+light.label+" \u2014 "+light.desc+"\nThe product is small/portable and naturally appears in different parts of the home \u2014 vary the immediate setting to show the product in a fresh context, while keeping the overall "+aes.label+" mood intact.\n\n";
+      t+="ENVIRONMENT \u2014 SAME AESTHETIC, FRESH SCENE\nSame overall "+aes.label+" aesthetic as the rest of the sequence \u2014 the visual language, palette, and styling vibe stay consistent.\nThis specific shot uses a different scene within that aesthetic:\nZone: "+zone.label+(zone.desc?" \u2014 "+zone.desc:"")+"\nWall: "+wall.label+" \u2014 "+wall.desc+"\nLighting: "+light.label+" \u2014 "+light.desc+"\nThe product is portable and naturally appears in different parts of the home \u2014 vary the immediate setting to show the product in a fresh context, while keeping the overall "+aes.label+" mood intact.\n\n";
     }
   }
 
@@ -314,7 +318,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }
 
   if(sn===2){
-    t+="SHOT 2 DIRECTION \u2014 HARD CAMERA RESET FROM SHOT 1\n"+(isLarge?"The environment (room, wall, floor, lighting) is UNCHANGED from Shot 1. ":"The "+aes.label+" aesthetic stays consistent. ")+"But the CAMERA POSITION IS COMPLETELY DIFFERENT.\nShot 1 was a 45-degree angle view. Shot 2 is a STRAIGHT-ON FRONT VIEW.\nThe camera has MOVED to directly in front of the product at eye level \u2014 not to the side, not above, not below. The product has not moved; only the camera has moved.\nThe product appears as a FLAT SYMMETRICAL SILHOUETTE in the frame, like the main image in an e-commerce product listing or a passport photo for furniture.\nLeft side and right side of the product are EQUAL in the frame.\nAll vertical edges of the product stay VERTICAL in the frame (not tilted, not converging).\nAll horizontal edges stay HORIZONTAL.\nThis is NOT a three-quarter angle. NOT a slight angle. NOT a dynamic perspective. It is strictly face-on, head-on, centered.\n\n";
+    t+="SHOT 2 DIRECTION \u2014 HARD CAMERA RESET FROM SHOT 1\n"+(variesEnv?"The "+aes.label+" aesthetic stays consistent. ":"The environment (room, wall, floor, lighting) is UNCHANGED from Shot 1. ")+"But the CAMERA POSITION IS COMPLETELY DIFFERENT.\nShot 1 was a 45-degree angle view. Shot 2 is a STRAIGHT-ON FRONT VIEW.\nThe camera has MOVED to directly in front of the product at eye level \u2014 not to the side, not above, not below. The product has not moved; only the camera has moved.\nThe product appears as a FLAT SYMMETRICAL SILHOUETTE in the frame, like the main image in an e-commerce product listing or a passport photo for furniture.\nLeft side and right side of the product are EQUAL in the frame.\nAll vertical edges of the product stay VERTICAL in the frame (not tilted, not converging).\nAll horizontal edges stay HORIZONTAL.\nThis is NOT a three-quarter angle. NOT a slight angle. NOT a dynamic perspective. It is strictly face-on, head-on, centered.\n\n";
   }
 
   t+="CAMERA & LENS\n";
@@ -336,7 +340,7 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }else{
     t+="- Keep the image premium, clean, and physically believable.\n";
   }
-  if(sn!==1) t+=isLarge?"- Keep environment coherent with Shot 1.\n":"- Keep "+aes.label+" aesthetic coherent across the sequence; this shot uses its own scene within that aesthetic.\n";
+  if(sn!==1) t+=variesEnv?"- Keep "+aes.label+" aesthetic coherent across the sequence; this shot uses its own scene within that aesthetic.\n":"- Keep environment coherent with Shot 1.\n";
 
   t+="\nNEGATIVE PROMPT\nNO generating or inventing product details. NO altering product color, shape, or material from input image. NO CGI LOOK, NO 3D render LOOK, NO illustration, no distortion.";
   if(isT2) t+=" NO saturated accent walls, NO mural wallpapers, NO editorial/campaign moodboard styling, NO over-styled props, NO dramatic lighting, NO golden hour mood.";
@@ -442,23 +446,23 @@ function App(){
     if(!cats[0].length||!aes[0].length||!aes2[0].length){alert("Data still loading. Try again in a moment.");return}
     if(!curAes[0].length||!curWalls[0].length||!curLights[0].length||!curMicros[0].length){alert("No "+activeTone+"-tone entries available in one of the pools. Add some via Resources, or pick a different tone.");return}
     var co=cats[0].find(function(c){return c.name===selCat[0]});if(!co)return;
-    var isLargeProduct=co.size==="large";
+    // varies_environment: true = re-randomize zone/wall/lighting/micros per shot; false = lock to Shot 1
+    // (default false for safety \u2014 crib-anchored bedding and staged products stay locked)
+    var variesEnv=co.varies_environment===true;
     // Aesthetic is ALWAYS locked across the sequence (varies between sequences via randomization)
     var a=resolve(curAes[0],mAes[0]),r=resolve(mrs[0],mMr[0]);
     var wd1=resolve(wds[0],mWd[0]);
     var others=wds[0].filter(function(x){return(x.id||x.name)!==(wd1.id||wd1.name)});
     var wd2=others.length?pk(others):wd1;
-    // For LARGE products: lock zone/wall/lighting/micro across all shots (Shot 1 hero anchors the room)
-    // For SMALL/MEDIUM products: vary zone/wall/lighting/micro per shot for visual variety
+    // For locked-environment products: pick zone/wall/lighting/micros once
+    // For varied-environment products: re-pick per shot (manual selections still override randomization)
     var lockedZ=resolve(zones[0],mZone[0]),lockedW=resolve(curWalls[0],mWall[0]),lockedL=resolve(curLights[0],mLight[0]),lockedM=resolve(curMicros[0],mMicro[0]);
     var filteredShots=shotsForCategory(selCat[0]);
     var cs=filteredShots.map(function(s){
-      // Per-shot environment: locked for large, fresh per shot for small/medium
-      // (manual selections still override randomization regardless)
-      var sZ=isLargeProduct?lockedZ:resolve(zones[0],mZone[0]);
-      var sW=isLargeProduct?lockedW:resolve(curWalls[0],mWall[0]);
-      var sL=isLargeProduct?lockedL:resolve(curLights[0],mLight[0]);
-      var sM=isLargeProduct?lockedM:resolve(curMicros[0],mMicro[0]);
+      var sZ=variesEnv?resolve(zones[0],mZone[0]):lockedZ;
+      var sW=variesEnv?resolve(curWalls[0],mWall[0]):lockedW;
+      var sL=variesEnv?resolve(curLights[0],mLight[0]):lockedL;
+      var sM=variesEnv?resolve(curMicros[0],mMicro[0]):lockedM;
       return{shot:s,prompt:makePrompt(selCat[0],s,a,sZ,sW,sL,sM,r,s.n===8?wd1:wd2,activeTone,cats[0]),aes:a,zone:sZ,wall:sW,light:sL,micro:sM,mr:r,wd:s.n===8?wd1:wd2};
     });
     cards[1](cs);openIdx[1](null);
@@ -629,7 +633,7 @@ function App(){
   // Template for new item based on pool type
   var templateFor=function(poolKey){
     if(poolKey==="aes"||poolKey==="aes2")return{id:"",label:"",mood:"",materials:"",language:""};
-    if(poolKey==="cats")return{name:"",size:"medium",accuracy:"",interaction:"",ip_strength:"0.75"};
+    if(poolKey==="cats")return{name:"",size:"medium",accuracy:"",interaction:"",ip_strength:"0.75",varies_environment:false};
     return{id:"",label:"",desc:""};
   };
 
@@ -653,7 +657,7 @@ function App(){
     E("div",{className:"modal"},
       E("div",{className:"modal-header"},E("h3",null,addMode[0]?"Add Entry":"Edit Entry"),E("button",{className:"modal-close",onClick:function(){if(!saving[0]){editItem[1](null);addMode[1](false)}}},"\u00D7")),
       E("div",{className:"modal-body"},
-        Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"&&k!=="tones"&&k!=="default_tone"}).map(function(k){
+        Object.keys(editItem[0]).filter(function(k){return k!=="_idx"&&k!=="_origKey"&&k!=="tones"&&k!=="default_tone"&&k!=="varies_environment"}).map(function(k){
           return E("div",{key:k},
             E("label",{className:"f-label"},k),
             (editItem[0][k]||"").length>60
@@ -677,6 +681,14 @@ function App(){
           E("select",{className:"f-input",value:editItem[0].default_tone||"neutral",onChange:function(e){editItem[1](Object.assign({},editItem[0],{default_tone:e.target.value}))}},
             ALL_TONES.map(function(t){return E("option",{key:t.v,value:t.v},t.l)})
           )
+        ),
+        POOL_USES_DEFAULT_TONE[rt[0]]&&E("div",{style:{marginTop:14}},
+          E("label",{className:"f-label"},"Environment Behavior"),
+          E("label",{className:"checkbox-row"},
+            E("input",{type:"checkbox",checked:editItem[0].varies_environment===true,onChange:function(e){editItem[1](Object.assign({},editItem[0],{varies_environment:e.target.checked}))}}),
+            E("span",null,"Vary environment per shot")
+          ),
+          E("div",{className:"tone-help"},"OFF (default): all 11 shots use the same room/wall/lighting (Shot 1 anchors the world). Best for crib-anchored bedding (Pillow, Comforter, Sheets) and large hero furniture. ON: each shot picks a fresh zone/wall/lighting within the same aesthetic. Best for portable items used in many places (Diaper Caddy, Nest Bag, Carry Cot, Feeding Pillow).")
         )
       ),
       E("div",{className:"modal-footer"},
