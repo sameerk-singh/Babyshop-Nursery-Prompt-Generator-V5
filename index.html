@@ -335,20 +335,20 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
 
   t+="CAMERA & LENS\n";
   if(sn===1){
-    if(isLarge) t+="Camera: 45-degree perspective, 35mm lens (wider lens to capture environment with breathing room), f/8-f/11, product placed off-center with at least 25-30% of the frame as negative space on the sides for environmental context, corrected verticals.\n";
-    else if(isCribAnchored(cat)) t+="Camera: 45-degree perspective from above-and-to-the-side of the crib, 50mm lens, f/5.6-f/8, camera positioned roughly 0.8-1.2 metres from the "+cat+" so the crib interior dominates the frame and the "+cat+" reads as the clear hero. Crib slats appear as foreground/edge framing. Tight editorial crop, not a wide room shot.\n";
-    else t+="Camera: 45-degree perspective, "+lens+" lens, f/8-f/11, product centered, corrected verticals.\n";
+    if(isLarge) t+="Camera: 45-degree angled perspective, full-frame camera, 35mm lens (wider lens to capture environment with breathing room), f/8, ~3-4m distance, eye-level, product placed off-center with at least 25-30% of the frame as negative space on the sides for environmental context, corrected verticals, deep focus.\n";
+    else if(isCribAnchored(cat)) t+="Camera: 45-degree perspective from above-and-to-the-side of the crib, full-frame camera, 50mm lens, f/5.6, ~0.8-1.2m distance from the "+cat+" so the crib interior dominates the frame and the "+cat+" reads as the clear hero. Crib slats appear as foreground/edge framing. Tight editorial crop, not a wide room shot. Deep focus, corrected verticals.\n";
+    else t+="Camera: 45-degree angled perspective, full-frame camera, "+lens+" lens, f/8, ~2.5-3m distance, eye-level, product centered, corrected verticals, deep focus.\n";
   }
-  else if(sn===2) t+="Camera: STRAIGHT-ON FRONT VIEW, dead-center, facing product head-on. "+lens+", f/8. Zero angle, zero rotation, zero perspective. Product front parallel to camera sensor. Composition is flat and symmetrical like a catalog main image.\n";
-  else if(sn===3) t+="Camera: eye-level, 50mm, f/8-f/11, product fills 80%+ of frame, minimal environment.\n";
-  else if(sn===4||sn===5) t+="Camera: close-up macro, 85-100mm, f/4-f/5.6, shallow depth, isolate detail.\n";
-  else if(sn===6) t+="Camera: directly overhead top-down, 50mm, f/8-f/11, flat even lighting.\n";
-  else if(sn===7) t+="Camera: mid-wide, 35mm, f/5.6-f/8, product within room framing.\n";
-  else if(sn===8) t+="Camera: eye-level, 35mm, f/5.6, "+(isT2?"natural domestic":"editorial")+" lifestyle framing.\n";
-  else if(sn===9) t+="Camera: tight vignette, 50mm, f/5.6-f/8, "+(isT2?"simple":"styled")+" surrounds.\n";
-  else if(sn===10) t+="Camera: close-up on mechanism at HIGHEST / PRIMARY position, 50-85mm, f/5.6, no people or hands, shallow-to-medium depth.\n";
-  else if(sn===11) t+="Camera: close-up on mechanism at LOWEST / SECONDARY position, 50-85mm, f/5.6, no people or hands, shallow-to-medium depth.\n";
-  else t+=lens+", f/8, corrected verticals.\n";
+  else if(sn===2) t+="Camera: STRAIGHT-ON FRONT VIEW, dead-center, facing product head-on. Full-frame camera, "+lens+" lens, f/8, ~2.5m distance, perfectly aligned geometry, deep focus. Zero angle, zero rotation, zero perspective. Product front parallel to camera sensor. Composition is flat and symmetrical like a catalog main image.\n";
+  else if(sn===3) t+="Camera: eye-level, full-frame camera, 50mm lens, f/8, ~1.5-2m distance, product fills 80%+ of frame, minimal environment, deep focus.\n";
+  else if(sn===4||sn===5) t+="Camera: close-up macro, full-frame camera, 85-100mm macro lens, f/5.6, ~0.4-0.6m working distance, extreme material and texture clarity, shallow depth, isolate detail.\n";
+  else if(sn===6) t+="Camera: directly overhead top-down (90\u00B0 vertical), full-frame camera, 50mm lens, f/8, ~1.5-2m distance, flat even lighting, no perspective distortion, deep focus.\n";
+  else if(sn===7) t+="Camera: mid-wide, full-frame camera, 35mm lens, f/5.6, ~3m distance, product within architectural room framing, eye-level, corrected verticals.\n";
+  else if(sn===8) t+="Camera: eye-level, full-frame camera, 35mm lens, f/5.6, ~2.5-3m distance, "+(isT2?"natural domestic":"editorial")+" lifestyle framing, corrected verticals.\n";
+  else if(sn===9) t+="Camera: tight vignette, full-frame camera, 50mm lens, f/5.6, ~1.5-2m distance, "+(isT2?"simple":"styled")+" surrounds, eye-level.\n";
+  else if(sn===10) t+="Camera: close-up on mechanism at HIGHEST / PRIMARY position, full-frame camera, 50-85mm lens, f/5.6, ~0.8-1.2m working distance, no people or hands, shallow-to-medium depth.\n";
+  else if(sn===11) t+="Camera: close-up on mechanism at LOWEST / SECONDARY position, full-frame camera, 50-85mm lens, f/5.6, ~0.8-1.2m working distance, no people or hands, shallow-to-medium depth.\n";
+  else t+="Full-frame camera, "+lens+" lens, f/8, corrected verticals, deep focus.\n";
 
   t+="\nCONTROL NOTES\n- The INPUT REFERENCE IMAGE is the only source of truth for the product.\n- Do NOT generate a new product. Do NOT alter the product from the input image.\n- Do NOT add, remove, or modify any product feature, color, material, or detail.\n- Environment, lighting, and props are the ONLY generated elements.\n- Keep the product dominant and commercially legible.\n";
   if(isT2){
@@ -358,9 +358,9 @@ function makePrompt(cat,shot,aes,zone,wall,light,micro,mr,wd,tone,cats){
   }
   if(sn!==1) t+=variesEnv?"- Keep "+aes.label+" aesthetic coherent across the sequence; this shot uses its own scene within that aesthetic.\n":"- Keep environment coherent with Shot 1.\n";
 
-  t+="\nNEGATIVE PROMPT\nNO generating or inventing product details. NO altering product color, shape, or material from input image. NO CGI LOOK, NO 3D render LOOK, NO illustration, no distortion.";
+  t+="\nNEGATIVE PROMPT\nNO generating or inventing product details. NO altering product color, shape, or material from input image. NO CGI LOOK, NO 3D render LOOK, NO illustration, NO distortion. NO grainy texture, NO dust particles in air, NO low resolution quality, NO HDR effect, NO overprocessed look, NO oversharpening.";
   if(isT2) t+=" NO saturated accent walls, NO mural wallpapers, NO editorial/campaign moodboard styling, NO over-styled props, NO dramatic lighting, NO golden hour mood.";
-  else t+=" No busy backgrounds, no cheap prop overload.";
+  else t+=" NO busy backgrounds, NO cheap prop overload.";
 
   return t;
 }
