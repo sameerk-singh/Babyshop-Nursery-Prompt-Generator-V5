@@ -452,11 +452,26 @@ function App(){
 
   var resolve=function(pool,sel){return sel==="_r"?pk(pool):pool.find(function(x){return(x.id||x.name)===sel})||pk(pool)};
 
-  // ═══ Categories that get Shots 10 & 11 (highest/lowest position feature demo) ═══
-  // All other categories produce a 9-shot sequence.
-  var ADJUSTABLE_CATEGORIES={"Crib":1,"Bouncer":1,"Walker":1,"Swing":1,"Recliner Chair":1,"Changing Table":1};
+  // ═══ Per-category shot-count tiers ═══
+  // SIMPLE_5: flat textiles \u2014 hero, straight-on, material macro, detail macro, model lifestyle
+  // MID_7:    soft goods with structure \u2014 add overhead + architectural to SIMPLE_5
+  // ADJUSTABLE_11: gets all 11 incl. high/low position
+  // (everything else: STANDARD 9 \u2014 the existing default)
+  var SIMPLE_CATEGORIES={"Pillow":1,"Comforter Set":1,"Cot Fitted Sheet":1,"Swaddle Blanket":1,"Receiving Blanket":1,"Bolster Set":1,"Cradle Bedding Set":1,"Bassinet Bedding":1,"Mattress":1};
+  var MID_CATEGORIES={"Diaper Caddy":1,"Nest Bag":1,"Sleeping Bag":1,"Sleeping Pod":1,"Feeding Pillow":1,"Baby Mat":1,"Carry Cot":1};
+  var ADJUSTABLE_CATEGORIES={"Crib":1,"Bouncer":1,"Walker":1,"Swing":1,"Baby Swing":1,"Baby Rocker":1,"Recliner Chair":1,"Changing Table":1,"Play Gym":1};
   var hasPositionShots=function(catName){return ADJUSTABLE_CATEGORIES.hasOwnProperty(catName)};
-  var shotsForCategory=function(catName){return shots[0].filter(function(s){return s.n<10||hasPositionShots(catName)})};
+  // SIMPLE_5: shots 1, 2, 4, 5, 8 (hero, straight-on, material macro, detail macro, model)
+  // MID_7:    shots 1, 2, 3, 4, 5, 6, 8 (adds clean crop + overhead)
+  // STANDARD: shots 1\u20139
+  // ADJUSTABLE: shots 1\u201311
+  var SIMPLE_SHOTS={1:1,2:1,4:1,5:1,8:1};
+  var MID_SHOTS={1:1,2:1,3:1,4:1,5:1,6:1,8:1};
+  var shotsForCategory=function(catName){
+    if(SIMPLE_CATEGORIES.hasOwnProperty(catName))return shots[0].filter(function(s){return SIMPLE_SHOTS.hasOwnProperty(s.n)});
+    if(MID_CATEGORIES.hasOwnProperty(catName))return shots[0].filter(function(s){return MID_SHOTS.hasOwnProperty(s.n)});
+    return shots[0].filter(function(s){return s.n<10||hasPositionShots(catName)});
+  };
   // (CRIB_ANCHORED constants and isCribAnchored / zonesForCategory live at module scope above)
 
   var gen=function(){
