@@ -738,7 +738,7 @@ function App(){
       E("div",{className:"login-card"},
         E("div",{className:"login-logo"},"B"),
         E("div",{className:"login-title"},"Babyshop Nursery"),
-        E("div",{className:"login-sub"},"AI Prompt Generator V5.7"),
+        E("div",{className:"login-sub"},"AI Prompt Generator V5.8"),
         E("div",{className:"login-desc"},"Team password required to continue."),
         E("input",{className:"login-input",type:"password",placeholder:"Enter team password",value:loginPw[0],autoFocus:true,
           onChange:function(e){loginPw[1](e.target.value);if(loginErr[0])loginErr[1]("")},
@@ -759,7 +759,7 @@ function App(){
   }
 
   var header=E("div",{className:"hdr"+tierCls},
-    E("div",{className:"hdr-left"},E("div",{className:"logo-mark"},"B"),E("div",null,E("div",{className:"logo-text"},"Babyshop Nursery"),E("div",{className:"logo-sub"},"AI Prompt Generator V5.7"))),
+    E("div",{className:"hdr-left"},E("div",{className:"logo-mark"},"B"),E("div",null,E("div",{className:"logo-text"},"Babyshop Nursery"),E("div",{className:"logo-sub"},"AI Prompt Generator V5.8"))),
     E("div",{className:"hdr-right"},
       E("button",{className:"auth-btn authed",onClick:doLogout,title:"Click to log out"},"\uD83D\uDD13 Logout"),
       E("div",{className:"sync-indicator"+syncCls,title:loadError[0]||""},E("span",{className:"sync-dot"}),E("span",null,syncText)),
