@@ -570,7 +570,9 @@ function App(){
     zones:{d:zones[0],s:zones[1],l:"Zones (shared)"},
     mrs:{d:mrs[0],s:mrs[1],l:"Model Regions (shared)"},
     wds:{d:wds[0],s:wds[1],l:"Wardrobes (shared)"},
-    cats:{d:cats[0],s:cats[1],l:"Categories (shared)"}
+    cats:{d:cats[0],s:cats[1],l:"Categories (shared)"},
+    fgprops:{d:fgProps[0],s:fgProps[1],l:"Foreground Floor Props (T1)"},
+    fgsurf:{d:fgSurf[0],s:fgSurf[1],l:"Foreground Floor Surfaces (T1)"}
   };
 
   var resolve=function(pool,sel){return sel==="_r"?pk(pool):pool.find(function(x){return(x.id||x.name)===sel})||pk(pool)};
@@ -805,7 +807,7 @@ function App(){
   // - Aesthetics/walls/lighting/micros: multi-select chip array (tones[])
   // - Categories: single-select dropdown (default_tone string)
   // - Zones/model_regions/wardrobes: no tone field
-  var POOL_USES_TONES_ARRAY={aes:1,aes2:1,walls:1,walls2:1,lights:1,lights2:1,micros:1,micros2:1};
+  var POOL_USES_TONES_ARRAY={aes:1,aes2:1,walls:1,walls2:1,lights:1,lights2:1,micros:1,micros2:1,fgprops:1,fgsurf:1};
   var POOL_USES_DEFAULT_TONE={cats:1};
   var ALL_TONES=[{v:"warm",l:"\uD83D\uDD25 Warm"},{v:"neutral",l:"\u26AA Neutral"},{v:"colorful",l:"\uD83C\uDF08 Colorful"}];
 
